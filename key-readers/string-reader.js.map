@@ -1,0 +1,1 @@
+{"version":3,"file":"string-reader.js","sourceRoot":"","sources":["string-reader.ts"],"names":[],"mappings":";;AAAA,uDAAkD;AAKlD,MAAa,YAAa,SAAQ,+BAAa;IAE3C,YACI,MAAsB,EACtB,QAAmB;QAEnB,KAAK,CAAC,MAAM,EAAE,QAAQ,CAAC,CAAC;IAC5B,CAAC;IAES,SAAS;QACf,OAAO,IAAI,CAAC,UAAU,CAAC,EAAE,QAAQ,EAAE,KAAK,EAAE,cAAc,EAAE,IAAI,EAAE,CAAC,CAAC;IACtE,CAAC;CACJ;AAZD,oCAYC"}
