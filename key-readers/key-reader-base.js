@@ -39,7 +39,7 @@ class KeyReaderBase {
             }
             else {
                 return this.stream.readNext(lengthData.len).then((buffer) => {
-                    if (!p.skipAllAllocations) {
+                    if (p.skipAllAllocations !== SkipAllocationsType.All) {
                         if (p.doEncode && lengthData.len <= redis_constants_1.REDIS_ENCODING_EMBSTR_SIZE_LIMIT) {
                             this.allocateMemory(size_constants_1.SIZE_OBJECT + size_constants_1.SIZE_STRING_HEADER + lengthData.len + 1);
                         }
@@ -114,7 +114,7 @@ class KeyReaderBase {
         if (value > 0) {
             digitCount += Math.floor(Math.log10(value) + 1);
         }
-        if (!p.skipAllAllocations) {
+        if (p.skipAllAllocations !== SkipAllocationsType.All) {
             this.allocateString(digitCount);
         }
         if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) {
@@ -130,7 +130,7 @@ class KeyReaderBase {
             .then((l) => uncompressedLength = l.len)
             .then(() => this.stream.readNext(compressedLength))
             .then((compressedBuffer) => {
-            if (!p.skipAllAllocations) {
+            if (p.skipAllAllocations !== SkipAllocationsType.All) {
                 this.allocateString(uncompressedLength);
             }
             if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) {

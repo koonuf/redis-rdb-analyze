@@ -72,7 +72,8 @@ export abstract class KeyReaderBase {
 
                 return this.stream.readNext(lengthData.len).then((buffer) => { 
 
-                    if (!p.skipAllAllocations) {
+                    if (p.skipAllAllocations !== SkipAllocationsType.All) {
+
                         if (p.doEncode && lengthData.len <= REDIS_ENCODING_EMBSTR_SIZE_LIMIT) {
                             this.allocateMemory(SIZE_OBJECT + SIZE_STRING_HEADER + lengthData.len + 1);
                         
@@ -168,7 +169,7 @@ export abstract class KeyReaderBase {
             digitCount += Math.floor(Math.log10(value) + 1);
         }
 
-        if (!p.skipAllAllocations) {
+        if (p.skipAllAllocations !== SkipAllocationsType.All) {
             this.allocateString(digitCount);
         }
 
@@ -191,7 +192,7 @@ export abstract class KeyReaderBase {
             .then(() => this.stream.readNext(compressedLength))
             .then((compressedBuffer) => {
 
-                if (!p.skipAllAllocations) {
+                if (p.skipAllAllocations !== SkipAllocationsType.All) {
                     this.allocateString(uncompressedLength);
                 }
         
