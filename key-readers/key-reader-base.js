@@ -39,13 +39,15 @@ class KeyReaderBase {
             }
             else {
                 return this.stream.readNext(lengthData.len).then((buffer) => {
-                    if (p.runAllocations) {
+                    if (!p.skipAllAllocations) {
                         if (p.doEncode && lengthData.len <= redis_constants_1.REDIS_ENCODING_EMBSTR_SIZE_LIMIT) {
                             this.allocateMemory(size_constants_1.SIZE_OBJECT + size_constants_1.SIZE_STRING_HEADER + lengthData.len + 1);
                         }
                         else {
                             this.allocateString(lengthData.len);
-                            this.allocateObject();
+                            if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) {
+                                this.allocateObject();
+                            }
                         }
                     }
                     return {
@@ -63,7 +65,7 @@ class KeyReaderBase {
         this.allocateMemory(size_constants_1.SIZE_OBJECT);
     }
     readKey() {
-        return this.readString({ doEncode: false, runAllocations: true }).then((readResults) => {
+        return this.readString({ doEncode: false, skipAllAllocations: SkipAllocationsType.ObjectWrapper }).then((readResults) => {
             this.key = readResults.value;
         });
     }
@@ -89,7 +91,7 @@ class KeyReaderBase {
                 }
                 else if (val >= size_constants_1.LONG_MIN && val <= size_constants_1.LONG_MAX) {
                     byteCount = size_constants_1.SIZE_POINTER;
-                    if (p.runAllocations) {
+                    if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) {
                         this.allocateObject();
                     }
                 }
@@ -112,8 +114,10 @@ class KeyReaderBase {
         if (value > 0) {
             digitCount += Math.floor(Math.log10(value) + 1);
         }
-        if (p.runAllocations) {
+        if (!p.skipAllAllocations) {
             this.allocateString(digitCount);
+        }
+        if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) {
             this.allocateObject();
         }
         return digitCount;
@@ -126,8 +130,10 @@ class KeyReaderBase {
             .then((l) => uncompressedLength = l.len)
             .then(() => this.stream.readNext(compressedLength))
             .then((compressedBuffer) => {
-            if (p.runAllocations) {
+            if (!p.skipAllAllocations) {
                 this.allocateString(uncompressedLength);
+            }
+            if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) {
                 this.allocateObject();
             }
             const value = lzf.decompress(compressedBuffer).toString(this.settings.stringEncoding);
@@ -154,4 +160,9 @@ const blockAlignSizes = [
     { breakingPoint: 128, alignBy: 32 },
     { breakingPoint: 16, alignBy: 16 }
 ];
+var SkipAllocationsType;
+(function (SkipAllocationsType) {
+    SkipAllocationsType[SkipAllocationsType["All"] = 1] = "All";
+    SkipAllocationsType[SkipAllocationsType["ObjectWrapper"] = 2] = "ObjectWrapper";
+})(SkipAllocationsType = exports.SkipAllocationsType || (exports.SkipAllocationsType = {}));
 //# sourceMappingURL=key-reader-base.js.map

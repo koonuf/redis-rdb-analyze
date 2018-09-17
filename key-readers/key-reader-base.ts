@@ -72,13 +72,16 @@ export abstract class KeyReaderBase {
 
                 return this.stream.readNext(lengthData.len).then((buffer) => { 
 
-                    if (p.runAllocations) {
+                    if (!p.skipAllAllocations) {
                         if (p.doEncode && lengthData.len <= REDIS_ENCODING_EMBSTR_SIZE_LIMIT) {
                             this.allocateMemory(SIZE_OBJECT + SIZE_STRING_HEADER + lengthData.len + 1);
                         
                         } else {
                             this.allocateString(lengthData.len);
-                            this.allocateObject();
+
+                            if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) {
+                                this.allocateObject();
+                            }
                         }
                     }
 
@@ -101,7 +104,7 @@ export abstract class KeyReaderBase {
     }
 
     private readKey(): Bluebird<any> { 
-        return this.readString({ doEncode: false, runAllocations: true }).then((readResults: IReadStringResults) => {
+        return this.readString({ doEncode: false, skipAllAllocations: SkipAllocationsType.ObjectWrapper }).then((readResults: IReadStringResults) => {
             this.key = readResults.value;
         });
     }
@@ -136,7 +139,7 @@ export abstract class KeyReaderBase {
 
                     byteCount = SIZE_POINTER;
 
-                    if (p.runAllocations) {
+                    if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) {
                         this.allocateObject();
                     }
 
@@ -165,8 +168,11 @@ export abstract class KeyReaderBase {
             digitCount += Math.floor(Math.log10(value) + 1);
         }
 
-        if (p.runAllocations) {
+        if (!p.skipAllAllocations) {
             this.allocateString(digitCount);
+        }
+
+        if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) { 
             this.allocateObject();
         }
 
@@ -185,10 +191,13 @@ export abstract class KeyReaderBase {
             .then(() => this.stream.readNext(compressedLength))
             .then((compressedBuffer) => {
 
-                if (p.runAllocations) {
+                if (!p.skipAllAllocations) {
                     this.allocateString(uncompressedLength);
-                    this.allocateObject();
                 }
+        
+                if (p.skipAllAllocations !== SkipAllocationsType.ObjectWrapper) { 
+                    this.allocateObject();
+                }                
 
                 const value = lzf.decompress(compressedBuffer).toString(this.settings.stringEncoding);
 
@@ -225,7 +234,12 @@ interface IMemoryBlockConfig {
 
 export interface IReadStringParams { 
     doEncode: boolean;
-    runAllocations: boolean;
+    skipAllAllocations?: SkipAllocationsType;
+}
+
+export enum SkipAllocationsType { 
+    All = 1,
+    ObjectWrapper = 2
 }
 
 export interface IReadStringResults { 

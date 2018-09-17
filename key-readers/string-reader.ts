@@ -13,6 +13,6 @@ export class StringReader extends KeyReaderBase {
     }
 
     protected readValue(): Bluebird<any> {
-        return this.readString({ doEncode: false, runAllocations: true });
+        return this.readString({ doEncode: false });
     }
 }

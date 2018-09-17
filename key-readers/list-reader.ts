@@ -20,7 +20,7 @@ export class ListReader extends KeyReaderBase {
     }
 
     private readNextListEntry(remainingEntryCount: number): Bluebird<any> { 
-        return this.readString({ doEncode: true, runAllocations: true }).then(() => { 
+        return this.readString({ doEncode: true }).then(() => { 
             if (remainingEntryCount > 1) { 
                 return this.readNextListEntry(remainingEntryCount - 1);
             }

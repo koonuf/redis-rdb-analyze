@@ -32,7 +32,7 @@ export class ZSetReader extends KeyReaderBase {
 
     private readNextZSetEntry(remainingEntryCount: number): Bluebird<any> { 
         
-        return this.readString({ doEncode: true, runAllocations: true }).then(() => {
+        return this.readString({ doEncode: true }).then(() => {
 
             return this.stream.readDoubleValue();
 

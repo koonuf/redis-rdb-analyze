@@ -19,7 +19,7 @@ class ZSetReader extends key_reader_base_1.KeyReaderBase {
         });
     }
     readNextZSetEntry(remainingEntryCount) {
-        return this.readString({ doEncode: true, runAllocations: true }).then(() => {
+        return this.readString({ doEncode: true }).then(() => {
             return this.stream.readDoubleValue();
         }).then(() => {
             this.allocateMemory(size_constants_1.getRandomSkipListNodeSize());

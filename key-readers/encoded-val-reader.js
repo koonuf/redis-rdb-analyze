@@ -6,7 +6,7 @@ class EncodedValReader extends key_reader_base_1.KeyReaderBase {
         super(stream, settings);
     }
     readValue() {
-        return this.readString({ doEncode: false, runAllocations: false }).then((results) => {
+        return this.readString({ doEncode: false, skipAllAllocations: key_reader_base_1.SkipAllocationsType.All }).then((results) => {
             this.allocateMemory(results.byteCount);
             this.allocateObject();
         });

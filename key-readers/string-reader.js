@@ -6,7 +6,7 @@ class StringReader extends key_reader_base_1.KeyReaderBase {
         super(stream, settings);
     }
     readValue() {
-        return this.readString({ doEncode: false, runAllocations: true });
+        return this.readString({ doEncode: false });
     }
 }
 exports.StringReader = StringReader;

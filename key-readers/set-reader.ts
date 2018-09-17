@@ -26,7 +26,7 @@ export class SetReader extends KeyReaderBase {
     }
 
     private readNextSetEntry(remainingEntryCount: number): Bluebird<any> { 
-        return this.readString({ doEncode: true, runAllocations: true }).then(() => { 
+        return this.readString({ doEncode: true }).then(() => { 
 
             this.dictionaryAllocator.addEntry(this);
 

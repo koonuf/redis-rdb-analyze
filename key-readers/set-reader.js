@@ -15,7 +15,7 @@ class SetReader extends key_reader_base_1.KeyReaderBase {
         });
     }
     readNextSetEntry(remainingEntryCount) {
-        return this.readString({ doEncode: true, runAllocations: true }).then(() => {
+        return this.readString({ doEncode: true }).then(() => {
             this.dictionaryAllocator.addEntry(this);
             if (remainingEntryCount > 1) {
                 return this.readNextSetEntry(remainingEntryCount - 1);

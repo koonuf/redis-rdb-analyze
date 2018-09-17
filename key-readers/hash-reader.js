@@ -15,8 +15,8 @@ class HashReader extends key_reader_base_1.KeyReaderBase {
         });
     }
     readNextHashEntry(remainingEntryCount) {
-        return this.readString({ doEncode: true, runAllocations: true }).then(() => {
-            return this.readString({ doEncode: true, runAllocations: true });
+        return this.readString({ doEncode: true }).then(() => {
+            return this.readString({ doEncode: true });
         }).then(() => {
             this.dictionaryAllocator.addEntry(this);
             if (remainingEntryCount > 1) {

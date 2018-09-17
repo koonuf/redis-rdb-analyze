@@ -26,8 +26,8 @@ export class HashReader extends KeyReaderBase {
     }
 
     private readNextHashEntry(remainingEntryCount: number): Bluebird<any> {
-        return this.readString({ doEncode: true, runAllocations: true }).then(() => {
-            return this.readString({ doEncode: true, runAllocations: true });
+        return this.readString({ doEncode: true }).then(() => {
+            return this.readString({ doEncode: true });
 
         }).then(() => {
 

@@ -12,7 +12,7 @@ class ListReader extends key_reader_base_1.KeyReaderBase {
         });
     }
     readNextListEntry(remainingEntryCount) {
-        return this.readString({ doEncode: true, runAllocations: true }).then(() => {
+        return this.readString({ doEncode: true }).then(() => {
             if (remainingEntryCount > 1) {
                 return this.readNextListEntry(remainingEntryCount - 1);
             }
