@@ -16,13 +16,11 @@ export class SetReader extends KeyReaderBase {
 
         this.dictionaryAllocator = new DictionaryAllocator();
         this.dictionaryAllocator.createDictionary(this);
+        this.allocateObject();
     }
 
     protected readValue(): Bluebird<any> {
         return this.stream.readRdbLength().then((lengthData: IRdbLength) => {
-
-            this.allocateObject();
-
             return this.readNextSetEntry(lengthData.len);
         });
     }

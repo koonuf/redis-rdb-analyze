@@ -8,11 +8,13 @@ class ZSetReader extends key_reader_base_1.KeyReaderBase {
         super(stream, settings);
         this.dictionaryAllocator = new dictionary_allocator_1.DictionaryAllocator();
         this.dictionaryAllocator.createDictionary(this);
+        this.allocateMemory(size_constants_1.SIZE_ZSET);
+        this.allocateMemory(size_constants_1.SIZE_SKIP_LIST);
+        this.allocateMemory(size_constants_1.SIZE_SKIPLIST_HEAD_NODE);
+        this.allocateObject();
     }
     readValue() {
         return this.stream.readRdbLength().then((lengthData) => {
-            this.allocateMemory(size_constants_1.SIZE_SKIP_LIST);
-            this.allocateObject();
             return this.readNextZSetEntry(lengthData.len);
         });
     }

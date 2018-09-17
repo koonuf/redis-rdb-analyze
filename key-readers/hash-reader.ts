@@ -16,13 +16,11 @@ export class HashReader extends KeyReaderBase {
 
         this.dictionaryAllocator = new DictionaryAllocator();
         this.dictionaryAllocator.createDictionary(this);
+        this.allocateObject();
     }
 
     protected readValue(): Bluebird<any> {
         return this.stream.readRdbLength().then((lengthData: IRdbLength) => {
-
-            this.allocateObject();
-
             return this.readNextHashEntry(lengthData.len);
         });
     }

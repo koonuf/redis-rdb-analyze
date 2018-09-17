@@ -4,10 +4,10 @@ const key_reader_base_1 = require("./key-reader-base");
 class ListReader extends key_reader_base_1.KeyReaderBase {
     constructor(stream, settings) {
         super(stream, settings);
+        this.allocateObject();
     }
     readValue() {
         return this.stream.readRdbLength().then((lengthData) => {
-            this.allocateObject();
             return this.readNextListEntry(lengthData.len);
         });
     }

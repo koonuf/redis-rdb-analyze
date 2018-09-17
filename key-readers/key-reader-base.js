@@ -16,9 +16,11 @@ class KeyReaderBase {
         return this.usedMemoryBytes;
     }
     allocateMemory(byteCount) {
-        if (byteCount & (size_constants_1.SIZE_ALLOCATION_ALIGN_BY - 1)) {
-            byteCount += (size_constants_1.SIZE_ALLOCATION_ALIGN_BY - (byteCount & (size_constants_1.SIZE_ALLOCATION_ALIGN_BY - 1)));
+        const alignBy = findMemoryBlockAlignment(byteCount);
+        if (byteCount & (alignBy - 1)) {
+            byteCount += (alignBy - (byteCount & (alignBy - 1)));
         }
+        //console.log(byteCount);
         this.usedMemoryBytes += byteCount;
     }
     readString(p) {
@@ -134,4 +136,22 @@ class KeyReaderBase {
     }
 }
 exports.KeyReaderBase = KeyReaderBase;
+function findMemoryBlockAlignment(size) {
+    for (const item of blockAlignSizes) {
+        if (size >= item.breakingPoint) {
+            return item.alignBy;
+        }
+    }
+    return 8;
+}
+const blockAlignSizes = [
+    { breakingPoint: 4 * size_constants_1.MB, alignBy: 4 * size_constants_1.MB },
+    { breakingPoint: 4 * size_constants_1.KB, alignBy: 4 * size_constants_1.KB },
+    { breakingPoint: 2 * size_constants_1.KB, alignBy: 512 },
+    { breakingPoint: size_constants_1.KB, alignBy: 256 },
+    { breakingPoint: 512, alignBy: 128 },
+    { breakingPoint: 256, alignBy: 64 },
+    { breakingPoint: 128, alignBy: 32 },
+    { breakingPoint: 16, alignBy: 16 }
+];
 //# sourceMappingURL=key-reader-base.js.map

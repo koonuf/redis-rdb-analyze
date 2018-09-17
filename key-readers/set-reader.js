@@ -7,10 +7,10 @@ class SetReader extends key_reader_base_1.KeyReaderBase {
         super(stream, settings);
         this.dictionaryAllocator = new dictionary_allocator_1.DictionaryAllocator();
         this.dictionaryAllocator.createDictionary(this);
+        this.allocateObject();
     }
     readValue() {
         return this.stream.readRdbLength().then((lengthData) => {
-            this.allocateObject();
             return this.readNextSetEntry(lengthData.len);
         });
     }

@@ -2,7 +2,7 @@ import { KeyReaderBase } from "./key-reader-base";
 import { ReadableStream, IRdbLength } from "../readable-stream";
 import * as Bluebird from "bluebird";
 import { ISettings } from "../schemas";
-import { SIZE_SKIPLIST_NODE, SIZE_SKIP_LIST } from "../size-constants";
+import { SIZE_SKIPLIST_NODE, SIZE_SKIP_LIST, SIZE_ZSET, SIZE_SKIPLIST_HEAD_NODE } from "../size-constants";
 import { DictionaryAllocator } from "./dictionary-allocator"; 
 
 export class ZSetReader extends KeyReaderBase {
@@ -17,14 +17,15 @@ export class ZSetReader extends KeyReaderBase {
 
         this.dictionaryAllocator = new DictionaryAllocator();
         this.dictionaryAllocator.createDictionary(this);
+
+        this.allocateMemory(SIZE_ZSET);
+        this.allocateMemory(SIZE_SKIP_LIST);
+        this.allocateMemory(SIZE_SKIPLIST_HEAD_NODE);
+        this.allocateObject();
     }
 
     protected readValue(): Bluebird<any> {
         return this.stream.readRdbLength().then((lengthData: IRdbLength) => {
-
-            this.allocateMemory(SIZE_SKIP_LIST);
-            this.allocateObject();
-
             return this.readNextZSetEntry(lengthData.len);
         });
     }
@@ -38,6 +39,7 @@ export class ZSetReader extends KeyReaderBase {
         }).then(() => {
 
             this.allocateMemory(SIZE_SKIPLIST_NODE);
+
             this.dictionaryAllocator.addEntry(this);
 
             if (remainingEntryCount > 1) {

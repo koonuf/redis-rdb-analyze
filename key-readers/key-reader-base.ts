@@ -3,8 +3,9 @@ import * as Bluebird from "bluebird";
 import { ISettings } from "../schemas";
 
 import {
-    SIZE_LONG, SIZE_OBJECT, SIZE_ALLOCATION_ALIGN_BY,
-    SIZE_STRING_HEADER, LONG_MIN, LONG_MAX, SIZE_POINTER
+    SIZE_LONG, SIZE_OBJECT,
+    SIZE_STRING_HEADER, LONG_MIN, LONG_MAX, SIZE_POINTER,
+    KB, MB
 } from "../size-constants";
 
 import {
@@ -34,9 +35,13 @@ export abstract class KeyReaderBase {
 
     allocateMemory(byteCount: number) { 
 
-        if (byteCount & (SIZE_ALLOCATION_ALIGN_BY - 1)) { 
-            byteCount += (SIZE_ALLOCATION_ALIGN_BY - (byteCount & (SIZE_ALLOCATION_ALIGN_BY - 1)));
+        const alignBy = findMemoryBlockAlignment(byteCount);
+
+        if (byteCount & (alignBy - 1)) { 
+            byteCount += (alignBy - (byteCount & (alignBy - 1)));
         }
+
+        //console.log(byteCount);
 
         this.usedMemoryBytes += byteCount;
     }
@@ -190,6 +195,32 @@ export abstract class KeyReaderBase {
                 return { value, byteCount: uncompressedLength };
             });
     }
+}
+
+function findMemoryBlockAlignment(size: number): number { 
+    for (const item of blockAlignSizes) { 
+        if (size >= item.breakingPoint) { 
+            return item.alignBy;
+        }
+    }
+
+    return 8;
+}
+
+const blockAlignSizes: IMemoryBlockConfig[] = [
+    { breakingPoint: 4*MB, alignBy: 4*MB },
+    { breakingPoint: 4*KB, alignBy: 4*KB },
+    { breakingPoint: 2*KB, alignBy: 512 },
+    { breakingPoint: KB, alignBy: 256 },
+    { breakingPoint: 512, alignBy: 128 },
+    { breakingPoint: 256, alignBy: 64 },
+    { breakingPoint: 128, alignBy: 32 },
+    { breakingPoint: 16, alignBy: 16 }
+];
+
+interface IMemoryBlockConfig {
+    breakingPoint: number;
+    alignBy: number;
 }
 
 export interface IReadStringParams { 

@@ -10,13 +10,11 @@ export class ListReader extends KeyReaderBase {
         settings: ISettings) { 
         
         super(stream, settings);
+        this.allocateObject();
     }
 
     protected readValue(): Bluebird<any> {
         return this.stream.readRdbLength().then((lengthData: IRdbLength) => {
-
-            this.allocateObject();
-
             return this.readNextListEntry(lengthData.len);
         });
     }
