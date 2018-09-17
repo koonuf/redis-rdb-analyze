@@ -18,9 +18,8 @@ exports.SIZE_SKIP_LIST = normalizeSize(exports.SIZE_POINTER + exports.SIZE_POINT
 exports.SIZE_ZSET = normalizeSize(exports.SIZE_POINTER + exports.SIZE_POINTER);
 const SIZE_DICT_HASH_TABLE = exports.SIZE_POINTER + (exports.SIZE_LONG * 3);
 exports.SIZE_DICT = normalizeSize(exports.SIZE_POINTER + exports.SIZE_POINTER + (SIZE_DICT_HASH_TABLE * 2) + exports.SIZE_LONG + exports.SIZE_INT);
-const AVERAGE_LEVEL = 2;
-exports.SIZE_SKIPLIST_NODE = getSkipListNodeSize(AVERAGE_LEVEL);
-exports.SIZE_SKIPLIST_HEAD_NODE = getSkipListNodeSize(32);
+const MAX_SKIP_LIST_LEVELS = 32;
+exports.SIZE_SKIPLIST_HEAD_NODE = getSkipListNodeSize(MAX_SKIP_LIST_LEVELS);
 exports.SIZE_DICT_ENTRY = normalizeSize(exports.SIZE_POINTER + exports.SIZE_POINTER + exports.SIZE_DOUBLE);
 function normalizeSize(size) {
     if (size & (NORMALIZE_SIZE_BY - 1)) {
@@ -30,5 +29,16 @@ function normalizeSize(size) {
 }
 function getSkipListNodeSize(levels) {
     return normalizeSize(exports.SIZE_DOUBLE + exports.SIZE_POINTER + exports.SIZE_POINTER + (levels * exports.SIZE_SKIPLIST_LEVEL));
+}
+function getRandomSkipListNodeSize() {
+    return getSkipListNodeSize(zslRandomLevel());
+}
+exports.getRandomSkipListNodeSize = getRandomSkipListNodeSize;
+function zslRandomLevel() {
+    let level = 1;
+    while (((Math.random() * 0xFFFFF) & 0xFFFF) < (0.25 * 0xFFFF) && level < MAX_SKIP_LIST_LEVELS) {
+        level += 1;
+    }
+    return level;
 }
 //# sourceMappingURL=size-constants.js.map
