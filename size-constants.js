@@ -21,6 +21,8 @@ exports.SIZE_DICT = normalizeSize(exports.SIZE_POINTER + exports.SIZE_POINTER + 
 const MAX_SKIP_LIST_LEVELS = 32;
 exports.SIZE_SKIPLIST_HEAD_NODE = getSkipListNodeSize(MAX_SKIP_LIST_LEVELS);
 exports.SIZE_DICT_ENTRY = normalizeSize(exports.SIZE_POINTER + exports.SIZE_POINTER + exports.SIZE_DOUBLE);
+exports.SIZE_LIST = normalizeSize((5 * exports.SIZE_POINTER) + exports.SIZE_LONG);
+exports.SIZE_LIST_NODE = normalizeSize(3 * exports.SIZE_POINTER);
 function normalizeSize(size) {
     if (size & (NORMALIZE_SIZE_BY - 1)) {
         size += (NORMALIZE_SIZE_BY - (size & (NORMALIZE_SIZE_BY - 1)));

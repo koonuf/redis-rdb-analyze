@@ -33,7 +33,7 @@ export abstract class KeyReaderBase {
         return this.usedMemoryBytes;
     }
 
-    allocateMemory(byteCount: number) { 
+    allocateMemory(byteCount: number): number { 
 
         const alignBy = findMemoryBlockAlignment(byteCount);
 
@@ -41,9 +41,9 @@ export abstract class KeyReaderBase {
             byteCount += (alignBy - (byteCount & (alignBy - 1)));
         }
 
-        //console.log(byteCount);
-
         this.usedMemoryBytes += byteCount;
+
+        return byteCount;
     }
 
     protected abstract readValue(): Bluebird<any>;

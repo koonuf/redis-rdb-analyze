@@ -20,8 +20,8 @@ class KeyReaderBase {
         if (byteCount & (alignBy - 1)) {
             byteCount += (alignBy - (byteCount & (alignBy - 1)));
         }
-        //console.log(byteCount);
         this.usedMemoryBytes += byteCount;
+        return byteCount;
     }
     readString(p) {
         return this.stream.readRdbLength().then((lengthData) => {

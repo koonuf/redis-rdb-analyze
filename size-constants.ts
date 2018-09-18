@@ -29,6 +29,9 @@ export const SIZE_SKIPLIST_HEAD_NODE = getSkipListNodeSize(MAX_SKIP_LIST_LEVELS)
 
 export const SIZE_DICT_ENTRY = normalizeSize(SIZE_POINTER + SIZE_POINTER + SIZE_DOUBLE);
 
+export const SIZE_LIST = normalizeSize((5 * SIZE_POINTER) + SIZE_LONG);
+export const SIZE_LIST_NODE = normalizeSize(3 * SIZE_POINTER);
+
 function normalizeSize(size: number): number { 
     if (size & (NORMALIZE_SIZE_BY - 1)) { 
         size += (NORMALIZE_SIZE_BY - (size & (NORMALIZE_SIZE_BY - 1)));
