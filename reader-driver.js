@@ -25,7 +25,7 @@ class ReaderDriver {
     }
     report() {
         const keyCount = this.keys.length;
-        const byteCount = this.keys.reduce((t, k) => t + k.getUsedMemoryBytes(), 0);
+        const byteCount = this.keys.reduce((t, k) => t + k.getUsedMemoryBytes(), 0) + redis_constants_1.INITIAL_MEMORY_CONSUMPTION;
         let msg = `Keys: ${keyCount}, Bytes: ${byteCount}`;
         for (const key of Object.keys(this.typeMap)) {
             msg = msg + `\n${key}: ${this.typeMap[key]}`;

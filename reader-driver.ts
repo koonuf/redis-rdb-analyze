@@ -15,7 +15,7 @@ import {
     REDIS_RDB_TYPE_STRING, REDIS_RDB_TYPE_LIST, REDIS_RDB_TYPE_SET,
     REDIS_RDB_TYPE_ZSET, REDIS_RDB_TYPE_HASH, REDIS_RDB_TYPE_HASH_ZIPLIST,
     REDIS_RDB_TYPE_HASH_ZIPMAP, REDIS_RDB_TYPE_LIST_ZIPLIST, REDIS_RDB_TYPE_SET_INTSET,
-    REDIS_RDB_TYPE_ZSET_ZIPLIST, 
+    REDIS_RDB_TYPE_ZSET_ZIPLIST, INITIAL_MEMORY_CONSUMPTION
 } from "./redis-constants";
 
 const HEADER_SIZE = 9;
@@ -44,7 +44,7 @@ export class ReaderDriver {
     report(): string { 
 
         const keyCount = this.keys.length;
-        const byteCount = this.keys.reduce((t, k) => t + k.getUsedMemoryBytes(), 0);
+        const byteCount = this.keys.reduce((t, k) => t + k.getUsedMemoryBytes(), 0) + INITIAL_MEMORY_CONSUMPTION;
 
         let msg = `Keys: ${keyCount}, Bytes: ${byteCount}`;
 

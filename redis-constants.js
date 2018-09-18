@@ -25,4 +25,5 @@ exports.REDIS_RDB_TYPE_HASH_ZIPLIST = 13;
 exports.REDIS_SHARED_INTEGERS = 10000;
 exports.REDIS_ENCODING_EMBSTR_SIZE_LIMIT = 39;
 exports.DICT_HT_INITIAL_SIZE = 4;
+exports.INITIAL_MEMORY_CONSUMPTION = 815072;
 //# sourceMappingURL=redis-constants.js.map
