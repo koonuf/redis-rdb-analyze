@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const reader_driver_1 = require("./reader-driver");
+const reader_driver_1 = require("./src/reader-driver");
 const fs_1 = require("fs");
 const settings = {
     stringEncoding: "utf8"

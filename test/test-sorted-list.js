@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const expect = require("expect");
-const sorted_list_1 = require("../sorted-list");
+const sorted_list_1 = require("../src/data-structures/sorted-list");
 describe("sorted-list", function () {
     it("works correctly with max items 3", function () {
         const list = new sorted_list_1.SortedList(3);

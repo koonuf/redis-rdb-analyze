@@ -1,5 +1,5 @@
 import * as expect from "expect";
-import { SortedList, IWeighted } from "../sorted-list";
+import { SortedList, IWeighted } from "../src/data-structures/sorted-list";
 
 describe("sorted-list", function () {
 

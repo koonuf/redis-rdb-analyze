@@ -1,5 +1,5 @@
-import { ISettings } from "./schemas";
-import { ReaderDriver } from "./reader-driver";
+import { ISettings } from "./src/schemas";
+import { ReaderDriver } from "./src/reader-driver";
 import { writeFileSync } from "fs";
 
 const settings: ISettings = {

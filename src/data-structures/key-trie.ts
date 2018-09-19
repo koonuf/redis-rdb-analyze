@@ -1,4 +1,4 @@
-import { IKey, IPrefixQuery, IPrefix } from "./schemas";
+import { IKey, IPrefixQuery, IPrefix } from "../schemas";
 
 export class KeyTrie { 
     
