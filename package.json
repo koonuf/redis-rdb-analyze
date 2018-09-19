@@ -10,7 +10,7 @@
     "url": "git://github.com/koonuf/redis-rdb-analyze.git"
   },
   "scripts": {
-    "test": "mocha --async-only"
+    "test": "mocha"
   },
   "dependencies": {
     "@types/bluebird": "^3.5.24",
@@ -20,6 +20,8 @@
     "typescript": "^3.0.3"
   },
   "devDependencies": {
+    "@types/expect": "^1.20.3",
+    "@types/mocha": "^5.2.5",
     "expect": "^1.19.0",
     "mocha": "^3.5.0"
   },

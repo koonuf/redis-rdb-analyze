@@ -1,6 +1,6 @@
 import { ReadableStream } from "./readable-stream";
 import * as Bluebird from "bluebird";
-import { ISettings } from "./schemas";
+import { ISettings, IKey } from "./schemas";
 import { KeyReaderBase } from "./key-readers/key-reader-base";
 import { HashReader } from "./key-readers/hash-reader";
 import { ListReader } from "./key-readers/list-reader";
@@ -24,7 +24,7 @@ const HEADER_START = "REDIS";
 
 export class ReaderDriver { 
 
-    private keys: KeyReaderBase[] = [];
+    private keys: IKey[] = [];
     private stream: ReadableStream;
 
     private typeMap: any = {};
@@ -44,7 +44,7 @@ export class ReaderDriver {
     report(): string { 
 
         const keyCount = this.keys.length;
-        const byteCount = this.keys.reduce((t, k) => t + k.getUsedMemoryBytes(), 0) + INITIAL_MEMORY_CONSUMPTION;
+        const byteCount = this.keys.reduce((t, k) => t + k.size, 0) + INITIAL_MEMORY_CONSUMPTION;
 
         let msg = `Keys: ${keyCount}, Bytes: ${byteCount}`;
 
@@ -53,6 +53,10 @@ export class ReaderDriver {
         }
 
         return msg;
+    }
+
+    getKeys(): IKey[] { 
+        return this.keys;
     }
 
     private readHeader(): Bluebird<any> { 
@@ -114,36 +118,75 @@ export class ReaderDriver {
         switch (rdbType) { 
 
             case REDIS_RDB_TYPE_STRING:
-                return this.addKey(new StringReader(this.stream, this.settings));
+                return this.addKey(new StringReader(this.stream, this.settings), rdbType);
 
             case REDIS_RDB_TYPE_LIST:
-                return this.addKey(new ListReader(this.stream, this.settings));
+                return this.addKey(new ListReader(this.stream, this.settings), rdbType);
 
             case REDIS_RDB_TYPE_SET:
-                return this.addKey(new SetReader(this.stream, this.settings));
+                return this.addKey(new SetReader(this.stream, this.settings), rdbType);
 
             case REDIS_RDB_TYPE_ZSET:
-                return this.addKey(new ZSetReader(this.stream, this.settings));
+                return this.addKey(new ZSetReader(this.stream, this.settings), rdbType);
 
             case REDIS_RDB_TYPE_HASH:
-                return this.addKey(new HashReader(this.stream, this.settings));
+                return this.addKey(new HashReader(this.stream, this.settings), rdbType);
 
-            case REDIS_RDB_TYPE_HASH_ZIPLIST:
             case REDIS_RDB_TYPE_HASH_ZIPMAP:
             case REDIS_RDB_TYPE_LIST_ZIPLIST:
             case REDIS_RDB_TYPE_SET_INTSET:
             case REDIS_RDB_TYPE_ZSET_ZIPLIST:
             case REDIS_RDB_TYPE_HASH_ZIPLIST:
-                return this.addKey(new EncodedValReader(this.stream, this.settings));
+                return this.addKey(new EncodedValReader(this.stream, this.settings), rdbType);
 
             default:
                 return this.stream.constructError(`Unknown rdbType ${rdbType}`);
         }
     }
 
-    private addKey(reader: KeyReaderBase): Bluebird<any> { 
+    private addKey(reader: KeyReaderBase, rdbType: number): Bluebird<any> { 
+        
         this.dbDictionaryAllocator.addEntry(reader);
-        this.keys.push(reader);
-        return reader.read();
+        
+        return reader.read(getRdbTypeTitle(rdbType)).then((keyData: IKey) => { 
+            this.keys.push(keyData);
+        });
+    }
+}
+
+function getRdbTypeTitle(rdbType: number): string { 
+    
+    switch (rdbType) { 
+
+        case REDIS_RDB_TYPE_STRING:
+            return "STRING";
+
+        case REDIS_RDB_TYPE_LIST:
+            return "LARGE_LIST";
+
+        case REDIS_RDB_TYPE_SET:
+            return "LARGE_SET";
+
+        case REDIS_RDB_TYPE_ZSET:
+            return "LARGE_ZSET";
+
+        case REDIS_RDB_TYPE_HASH:
+            return "LARGE_HASH";
+
+        case REDIS_RDB_TYPE_HASH_ZIPLIST:
+        case REDIS_RDB_TYPE_HASH_ZIPMAP:
+            return "SMALL_HASH";
+            
+        case REDIS_RDB_TYPE_LIST_ZIPLIST:
+            return "SMALL_LIST";
+        
+        case REDIS_RDB_TYPE_SET_INTSET:
+            return "SMALL_SET";
+        
+        case REDIS_RDB_TYPE_ZSET_ZIPLIST:
+            return "SMALL_ZSET";
+        
+        default:
+            return "UNKNOWN";
     }
 }

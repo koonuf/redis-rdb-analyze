@@ -1,6 +1,6 @@
 import { ReadableStream, IRdbLength } from "../readable-stream";
 import * as Bluebird from "bluebird";
-import { ISettings } from "../schemas";
+import { ISettings, IKey } from "../schemas";
 
 import {
     SIZE_LONG, SIZE_OBJECT,
@@ -25,12 +25,18 @@ export abstract class KeyReaderBase {
         protected settings: ISettings) { 
     }
 
-    read(): Bluebird<any> { 
-        return this.readKey().then(() => this.readValue());
-    }
+    read(keyType: string): Bluebird<IKey> { 
 
-    getUsedMemoryBytes() { 
-        return this.usedMemoryBytes;
+        return this.readKey().then(() => this.readValue()).then(() => { 
+            
+            const result: IKey = {
+                key: this.key,
+                size: this.usedMemoryBytes,
+                keyType
+            };
+
+            return result;
+        });
     }
 
     allocateMemory(byteCount: number): number { 

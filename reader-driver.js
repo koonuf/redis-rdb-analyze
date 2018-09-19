@@ -25,12 +25,15 @@ class ReaderDriver {
     }
     report() {
         const keyCount = this.keys.length;
-        const byteCount = this.keys.reduce((t, k) => t + k.getUsedMemoryBytes(), 0) + redis_constants_1.INITIAL_MEMORY_CONSUMPTION;
+        const byteCount = this.keys.reduce((t, k) => t + k.size, 0) + redis_constants_1.INITIAL_MEMORY_CONSUMPTION;
         let msg = `Keys: ${keyCount}, Bytes: ${byteCount}`;
         for (const key of Object.keys(this.typeMap)) {
             msg = msg + `\n${key}: ${this.typeMap[key]}`;
         }
         return msg;
+    }
+    getKeys() {
+        return this.keys;
     }
     readHeader() {
         return this.stream.readNext(HEADER_SIZE).then((buffer) => {
@@ -74,31 +77,56 @@ class ReaderDriver {
     readKeyValuePair(rdbType) {
         switch (rdbType) {
             case redis_constants_1.REDIS_RDB_TYPE_STRING:
-                return this.addKey(new string_reader_1.StringReader(this.stream, this.settings));
+                return this.addKey(new string_reader_1.StringReader(this.stream, this.settings), rdbType);
             case redis_constants_1.REDIS_RDB_TYPE_LIST:
-                return this.addKey(new list_reader_1.ListReader(this.stream, this.settings));
+                return this.addKey(new list_reader_1.ListReader(this.stream, this.settings), rdbType);
             case redis_constants_1.REDIS_RDB_TYPE_SET:
-                return this.addKey(new set_reader_1.SetReader(this.stream, this.settings));
+                return this.addKey(new set_reader_1.SetReader(this.stream, this.settings), rdbType);
             case redis_constants_1.REDIS_RDB_TYPE_ZSET:
-                return this.addKey(new zset_reader_1.ZSetReader(this.stream, this.settings));
+                return this.addKey(new zset_reader_1.ZSetReader(this.stream, this.settings), rdbType);
             case redis_constants_1.REDIS_RDB_TYPE_HASH:
-                return this.addKey(new hash_reader_1.HashReader(this.stream, this.settings));
-            case redis_constants_1.REDIS_RDB_TYPE_HASH_ZIPLIST:
+                return this.addKey(new hash_reader_1.HashReader(this.stream, this.settings), rdbType);
             case redis_constants_1.REDIS_RDB_TYPE_HASH_ZIPMAP:
             case redis_constants_1.REDIS_RDB_TYPE_LIST_ZIPLIST:
             case redis_constants_1.REDIS_RDB_TYPE_SET_INTSET:
             case redis_constants_1.REDIS_RDB_TYPE_ZSET_ZIPLIST:
             case redis_constants_1.REDIS_RDB_TYPE_HASH_ZIPLIST:
-                return this.addKey(new encoded_val_reader_1.EncodedValReader(this.stream, this.settings));
+                return this.addKey(new encoded_val_reader_1.EncodedValReader(this.stream, this.settings), rdbType);
             default:
                 return this.stream.constructError(`Unknown rdbType ${rdbType}`);
         }
     }
-    addKey(reader) {
+    addKey(reader, rdbType) {
         this.dbDictionaryAllocator.addEntry(reader);
-        this.keys.push(reader);
-        return reader.read();
+        return reader.read(getRdbTypeTitle(rdbType)).then((keyData) => {
+            this.keys.push(keyData);
+        });
     }
 }
 exports.ReaderDriver = ReaderDriver;
+function getRdbTypeTitle(rdbType) {
+    switch (rdbType) {
+        case redis_constants_1.REDIS_RDB_TYPE_STRING:
+            return "STRING";
+        case redis_constants_1.REDIS_RDB_TYPE_LIST:
+            return "LARGE_LIST";
+        case redis_constants_1.REDIS_RDB_TYPE_SET:
+            return "LARGE_SET";
+        case redis_constants_1.REDIS_RDB_TYPE_ZSET:
+            return "LARGE_ZSET";
+        case redis_constants_1.REDIS_RDB_TYPE_HASH:
+            return "LARGE_HASH";
+        case redis_constants_1.REDIS_RDB_TYPE_HASH_ZIPLIST:
+        case redis_constants_1.REDIS_RDB_TYPE_HASH_ZIPMAP:
+            return "SMALL_HASH";
+        case redis_constants_1.REDIS_RDB_TYPE_LIST_ZIPLIST:
+            return "SMALL_LIST";
+        case redis_constants_1.REDIS_RDB_TYPE_SET_INTSET:
+            return "SMALL_SET";
+        case redis_constants_1.REDIS_RDB_TYPE_ZSET_ZIPLIST:
+            return "SMALL_ZSET";
+        default:
+            return "UNKNOWN";
+    }
+}
 //# sourceMappingURL=reader-driver.js.map

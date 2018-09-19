@@ -9,11 +9,15 @@ class KeyReaderBase {
         this.settings = settings;
         this.usedMemoryBytes = 0;
     }
-    read() {
-        return this.readKey().then(() => this.readValue());
-    }
-    getUsedMemoryBytes() {
-        return this.usedMemoryBytes;
+    read(keyType) {
+        return this.readKey().then(() => this.readValue()).then(() => {
+            const result = {
+                key: this.key,
+                size: this.usedMemoryBytes,
+                keyType
+            };
+            return result;
+        });
     }
     allocateMemory(byteCount) {
         const alignBy = findMemoryBlockAlignment(byteCount);
