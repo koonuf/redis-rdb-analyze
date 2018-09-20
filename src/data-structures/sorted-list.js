@@ -64,6 +64,9 @@ class SortedList {
         if (nextLarger) {
             newNode.next = nextLarger;
             newNode.prev = nextLarger.prev;
+            if (newNode.prev) {
+                newNode.prev.next = newNode;
+            }
             nextLarger.prev = newNode;
             if (nextLarger === this.head) {
                 this.head = newNode;
@@ -71,6 +74,7 @@ class SortedList {
         }
         else {
             this.tail.next = newNode;
+            newNode.prev = this.tail;
             this.tail = newNode;
         }
     }

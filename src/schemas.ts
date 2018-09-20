@@ -8,12 +8,8 @@ export interface IKey {
     size: number;
 }
 
-export interface IPrefixQuery { 
-    topCount: number;
-    abovePercent: number;
-}
-
-export interface IPrefix { 
-    prefix: string;
-    size: number;
+export interface IPrefixTreeNode { 
+    prefix?: string;
+    memoryConsumptionPercent?: string;
+    children?: IPrefixTreeNode[];
 }

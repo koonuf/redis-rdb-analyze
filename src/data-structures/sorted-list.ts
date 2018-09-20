@@ -53,7 +53,6 @@ export class SortedList<T extends IWeighted> {
 
         // remove head
         const secondItem = this.head!.next;
-
         if (secondItem) {
             secondItem.prev = undefined;
         }
@@ -94,6 +93,11 @@ export class SortedList<T extends IWeighted> {
 
             newNode.next = nextLarger;
             newNode.prev = nextLarger.prev;
+
+            if (newNode.prev) { 
+                newNode.prev.next = newNode;
+            }
+            
             nextLarger.prev = newNode;
 
             if (nextLarger === this.head) { 
@@ -103,6 +107,7 @@ export class SortedList<T extends IWeighted> {
         } else { 
 
             this.tail!.next = newNode;
+            newNode.prev = this.tail;
             this.tail = newNode;
         }
     }
