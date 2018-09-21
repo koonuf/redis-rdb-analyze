@@ -1,6 +1,6 @@
 {
   "name": "redis-rdb-analyze",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "",
   "author": "Konstantins Onufrijevs",
   "license": "MIT",
@@ -32,5 +32,6 @@
   "homepage": "https://github.com/koonuf/redis-rdb-analyze#readme",
   "directories": {
     "test": "test"
-  }
+  },
+  "bin": "./bin"
 }
