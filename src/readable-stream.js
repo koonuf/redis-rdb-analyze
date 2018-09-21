@@ -8,6 +8,7 @@ const LAST_6_BITS_MASK = 0x3F;
 class ReadableStream {
     constructor(filePath) {
         this.isFinished = false;
+        this.position = 0;
         this.stream = fs_1.createReadStream(filePath);
         this.isReadable = false;
         this.isFinished = false;
@@ -30,6 +31,15 @@ class ReadableStream {
                 this.resetDeferred();
             }
         });
+        this.detectFileSize(filePath);
+    }
+    getPercentComplete() {
+        if (this.position && this.fileSize) {
+            return Math.floor(((this.position + 1) * 100) / this.fileSize);
+        }
+        else {
+            return 0;
+        }
     }
     readNext(size) {
         if (this.isFinished) {
@@ -111,6 +121,13 @@ class ReadableStream {
     resetDeferred() {
         this.deferred = null;
         this.pendingReadSize = 0;
+    }
+    detectFileSize(filePath) {
+        fs_1.stat(filePath, (e, stats) => {
+            if (!e && stats) {
+                this.fileSize = stats.size;
+            }
+        });
     }
 }
 exports.ReadableStream = ReadableStream;

@@ -1,6 +1,6 @@
 import { ReadableStream } from "./readable-stream";
 import * as Bluebird from "bluebird";
-import { ISettings, IKey } from "./schemas";
+import { ISettings, IKey, IDumpReadResults } from "./schemas";
 import { KeyReaderBase } from "./key-readers/key-reader-base";
 import { HashReader } from "./key-readers/hash-reader";
 import { ListReader } from "./key-readers/list-reader";
@@ -27,7 +27,6 @@ export class ReaderDriver {
     private keys: IKey[] = [];
     private stream: ReadableStream;
 
-    private typeMap: any = {};
     private dbDictionaryAllocator = new DictionaryAllocator();
 
     constructor(
@@ -37,26 +36,22 @@ export class ReaderDriver {
         this.stream = new ReadableStream(filePath);
     }
 
-    read(): Bluebird<any> { 
-        return this.readHeader().then(() => this.continueReadingBody());
+    read(): Bluebird<IDumpReadResults> { 
+        return this.readHeader().then(() => this.continueReadingBody()).then(() => this.constructResults());
     }
 
-    report(): string { 
+    getPercentComplete(): number { 
+        return this.stream.getPercentComplete();
+    }
 
+    private constructResults(): IDumpReadResults { 
+        
         const keyCount = this.keys.length;
         const byteCount = this.keys.reduce((t, k) => t + k.size, 0) + INITIAL_MEMORY_CONSUMPTION;
 
-        let msg = `Keys: ${keyCount}, Bytes: ${byteCount}`;
+        const resultsReport = `Keys: ${keyCount}, Bytes: ${byteCount}`;
 
-        for (const key of Object.keys(this.typeMap)) { 
-            msg = msg + `\n${key}: ${this.typeMap[key]}`;
-        }
-
-        return msg;
-    }
-
-    getKeys(): IKey[] { 
-        return this.keys;
+        return { resultsReport, keys: this.keys };
     }
 
     private readHeader(): Bluebird<any> { 
@@ -87,8 +82,6 @@ export class ReaderDriver {
     private readNextEntry(): Bluebird<any> { 
 
         return this.stream.readNextByte().then((rdbType: number) => { 
-
-            this.typeMap[rdbType] = (this.typeMap[rdbType] || 0) + 1;
 
             switch (rdbType) { 
                 case REDIS_RDB_OPCODE_EXPIRETIME:

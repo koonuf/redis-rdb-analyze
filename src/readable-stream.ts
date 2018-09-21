@@ -1,7 +1,7 @@
 "use strict";
 
 import * as Bluebird from "bluebird";
-import { createReadStream, ReadStream } from "fs";
+import { createReadStream, ReadStream, stat, Stats } from "fs";
 import { REDIS_RDB_ENCVAL, REDIS_RDB_6BITLEN, REDIS_RDB_14BITLEN } from "./redis-constants";
 
 const FIRST_2_BITS_MASK = 0xC0;
@@ -16,8 +16,9 @@ export class ReadableStream {
     private deferred: Bluebird.Resolver<Buffer> | null;
     private pendingReadSize: number;
 
-    private position: number;
+    private position: number = 0;
     private lastReadSize: number;
+    private fileSize: number;
 
     constructor(filePath: string) { 
 
@@ -50,6 +51,18 @@ export class ReadableStream {
                 this.resetDeferred();
             }
         });
+
+        this.detectFileSize(filePath);
+    }
+
+    getPercentComplete(): number { 
+
+        if (this.position && this.fileSize) {
+            return Math.floor(((this.position + 1) * 100) / this.fileSize);
+
+        } else { 
+            return 0;
+        }
     }
 
     readNext(size: number): Bluebird<Buffer> { 
@@ -156,6 +169,14 @@ export class ReadableStream {
     private resetDeferred() { 
         this.deferred = null;
         this.pendingReadSize = 0;
+    }
+
+    private detectFileSize(filePath: string) { 
+        stat(filePath, (e, stats: Stats) => { 
+            if (!e && stats) { 
+                this.fileSize = stats.size;
+            }
+        });
     }
 }
 

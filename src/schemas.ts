@@ -13,3 +13,8 @@ export interface IPrefixTreeNode {
     memoryConsumptionPercent?: string;
     children?: IPrefixTreeNode[];
 }
+
+export class IDumpReadResults { 
+    keys: IKey[];
+    resultsReport: string;
+}

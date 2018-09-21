@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-require('./test-load.js');
+require('./src/cli.js');

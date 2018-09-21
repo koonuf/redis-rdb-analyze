@@ -16,24 +16,20 @@ class ReaderDriver {
     constructor(filePath, settings) {
         this.settings = settings;
         this.keys = [];
-        this.typeMap = {};
         this.dbDictionaryAllocator = new dictionary_allocator_1.DictionaryAllocator();
         this.stream = new readable_stream_1.ReadableStream(filePath);
     }
     read() {
-        return this.readHeader().then(() => this.continueReadingBody());
+        return this.readHeader().then(() => this.continueReadingBody()).then(() => this.constructResults());
     }
-    report() {
+    getPercentComplete() {
+        return this.stream.getPercentComplete();
+    }
+    constructResults() {
         const keyCount = this.keys.length;
         const byteCount = this.keys.reduce((t, k) => t + k.size, 0) + redis_constants_1.INITIAL_MEMORY_CONSUMPTION;
-        let msg = `Keys: ${keyCount}, Bytes: ${byteCount}`;
-        for (const key of Object.keys(this.typeMap)) {
-            msg = msg + `\n${key}: ${this.typeMap[key]}`;
-        }
-        return msg;
-    }
-    getKeys() {
-        return this.keys;
+        const resultsReport = `Keys: ${keyCount}, Bytes: ${byteCount}`;
+        return { resultsReport, keys: this.keys };
     }
     readHeader() {
         return this.stream.readNext(HEADER_SIZE).then((buffer) => {
@@ -56,7 +52,6 @@ class ReaderDriver {
     }
     readNextEntry() {
         return this.stream.readNextByte().then((rdbType) => {
-            this.typeMap[rdbType] = (this.typeMap[rdbType] || 0) + 1;
             switch (rdbType) {
                 case redis_constants_1.REDIS_RDB_OPCODE_EXPIRETIME:
                     return this.stream.readNext(4);
