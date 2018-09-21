@@ -17,6 +17,7 @@ import {
     REDIS_RDB_TYPE_HASH_ZIPMAP, REDIS_RDB_TYPE_LIST_ZIPLIST, REDIS_RDB_TYPE_SET_INTSET,
     REDIS_RDB_TYPE_ZSET_ZIPLIST, INITIAL_MEMORY_CONSUMPTION
 } from "./redis-constants";
+import { MB } from "./size-constants";
 
 const HEADER_SIZE = 9;
 const RDB_VERSION = 6;
@@ -48,8 +49,26 @@ export class ReaderDriver {
         
         const keyCount = this.keys.length;
         const byteCount = this.keys.reduce((t, k) => t + k.size, 0) + INITIAL_MEMORY_CONSUMPTION;
+        const keyTypeReportData = this.keys.reduce((t: any, k) => {
 
-        const resultsReport = `Keys: ${keyCount}, Bytes: ${byteCount}`;
+            let reportItem: { size: number, count: number } = t[k.keyType];
+
+            if (!reportItem) { 
+                reportItem = t[k.keyType] = { size: 0, count: 0 };
+            }
+
+            reportItem.count++;
+            reportItem.size += k.size;
+
+            return t;
+        }, {});
+        
+        const keyTypeReport = Object.keys(keyTypeReportData).map((keyType: string) => { 
+            const reportItem: { size: number, count: number } = keyTypeReportData[keyType];
+            return `${keyType}: ${getSizeTitle(reportItem.size)}, ${reportItem.count} keys`;
+        });
+
+        const resultsReport = `Keys: ${keyCount}, Bytes: ${byteCount}\n${keyTypeReport.join("\n")}`;
 
         return { resultsReport, keys: this.keys };
     }
@@ -145,6 +164,11 @@ export class ReaderDriver {
             this.keys.push(keyData);
         });
     }
+}
+
+function getSizeTitle(size: number): string { 
+    size = size / MB * 10;
+    return (Math.round(size) / 10) + "MB";
 }
 
 function getRdbTypeTitle(rdbType: number): string { 

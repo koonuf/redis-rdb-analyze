@@ -9,6 +9,7 @@ const zset_reader_1 = require("./key-readers/zset-reader");
 const encoded_val_reader_1 = require("./key-readers/encoded-val-reader");
 const dictionary_allocator_1 = require("./key-readers/dictionary-allocator");
 const redis_constants_1 = require("./redis-constants");
+const size_constants_1 = require("./size-constants");
 const HEADER_SIZE = 9;
 const RDB_VERSION = 6;
 const HEADER_START = "REDIS";
@@ -28,7 +29,20 @@ class ReaderDriver {
     constructResults() {
         const keyCount = this.keys.length;
         const byteCount = this.keys.reduce((t, k) => t + k.size, 0) + redis_constants_1.INITIAL_MEMORY_CONSUMPTION;
-        const resultsReport = `Keys: ${keyCount}, Bytes: ${byteCount}`;
+        const keyTypeReportData = this.keys.reduce((t, k) => {
+            let reportItem = t[k.keyType];
+            if (!reportItem) {
+                reportItem = t[k.keyType] = { size: 0, count: 0 };
+            }
+            reportItem.count++;
+            reportItem.size += k.size;
+            return t;
+        }, {});
+        const keyTypeReport = Object.keys(keyTypeReportData).map((keyType) => {
+            const reportItem = keyTypeReportData[keyType];
+            return `${keyType}: ${getSizeTitle(reportItem.size)}, ${reportItem.count} keys`;
+        });
+        const resultsReport = `Keys: ${keyCount}, Bytes: ${byteCount}\n${keyTypeReport.join("\n")}`;
         return { resultsReport, keys: this.keys };
     }
     readHeader() {
@@ -99,6 +113,10 @@ class ReaderDriver {
     }
 }
 exports.ReaderDriver = ReaderDriver;
+function getSizeTitle(size) {
+    size = size / size_constants_1.MB * 10;
+    return (Math.round(size) / 10) + "MB";
+}
 function getRdbTypeTitle(rdbType) {
     switch (rdbType) {
         case redis_constants_1.REDIS_RDB_TYPE_STRING:
