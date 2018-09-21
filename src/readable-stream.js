@@ -33,7 +33,7 @@ class ReadableStream {
     }
     readNext(size) {
         if (this.isFinished) {
-            this.throwOnReadingFinished();
+            return this.constructError("Trying to read finished stream");
         }
         if (this.isReadable) {
             const buffer = this.readFromStream(size);
@@ -45,7 +45,7 @@ class ReadableStream {
             }
         }
         if (this.deferred) {
-            throw new Error("Reading deferred stream");
+            return this.constructError("Reading deferred stream");
         }
         this.deferred = Bluebird.defer();
         this.pendingReadSize = size;
@@ -97,9 +97,8 @@ class ReadableStream {
             }
         });
     }
-    constructError(errorObject) {
-        // TODO: better error description
-        return Bluebird.reject(errorObject);
+    constructError(errorMessage) {
+        return Bluebird.reject(`${errorMessage}. Current stream position: ${this.position}, last read size: ${this.lastReadSize}`);
     }
     readFromStream(size) {
         const buffer = this.stream.read(size);
@@ -112,9 +111,6 @@ class ReadableStream {
     resetDeferred() {
         this.deferred = null;
         this.pendingReadSize = 0;
-    }
-    throwOnReadingFinished() {
-        throw new Error(`Trying to read finished stream. Read bytes: ${this.position}, last read size: ${this.lastReadSize}`);
     }
 }
 exports.ReadableStream = ReadableStream;
