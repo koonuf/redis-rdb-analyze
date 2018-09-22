@@ -9,7 +9,6 @@ const zset_reader_1 = require("./key-readers/zset-reader");
 const encoded_val_reader_1 = require("./key-readers/encoded-val-reader");
 const dictionary_allocator_1 = require("./key-readers/dictionary-allocator");
 const redis_constants_1 = require("./redis-constants");
-const size_constants_1 = require("./size-constants");
 const HEADER_SIZE = 9;
 const RDB_VERSION = 6;
 const HEADER_START = "REDIS";
@@ -38,12 +37,22 @@ class ReaderDriver {
             reportItem.size += k.size;
             return t;
         }, {});
-        const keyTypeReport = Object.keys(keyTypeReportData).map((keyType) => {
+        const keyTypes = Object.keys(keyTypeReportData).sort((a, b) => keyTypeReportData[b].size - keyTypeReportData[a].size);
+        const keyTypeReportParts = keyTypes.map((keyType) => {
             const reportItem = keyTypeReportData[keyType];
-            return `${keyType}: ${getSizeTitle(reportItem.size)}, ${reportItem.count} keys`;
+            return `${keyType}: ${Math.round(100 * reportItem.size / byteCount)}% (${reportItem.count} keys)`;
         });
-        const resultsReport = `Keys: ${keyCount}, Bytes: ${byteCount}\n${keyTypeReport.join("\n")}`;
-        return { resultsReport, keys: this.keys };
+        const resultsReportParts = [
+            ``,
+            `Found ${keyCount} keys, estimated ${byteCount} bytes of memory consumption`,
+            ``,
+            `Memory usage by key type:`
+        ].concat(keyTypeReportParts);
+        const maxLineLength = resultsReportParts.reduce((t, i) => Math.max(t, i.length), 0);
+        resultsReportParts.unshift("#".repeat(maxLineLength));
+        resultsReportParts.unshift("");
+        resultsReportParts.push("#".repeat(maxLineLength));
+        return { resultsReport: resultsReportParts.join("\n"), keys: this.keys };
     }
     readHeader() {
         return this.stream.readNext(HEADER_SIZE).then((buffer) => {
@@ -113,10 +122,6 @@ class ReaderDriver {
     }
 }
 exports.ReaderDriver = ReaderDriver;
-function getSizeTitle(size) {
-    size = size / size_constants_1.MB * 10;
-    return (Math.round(size) / 10) + "MB";
-}
 function getRdbTypeTitle(rdbType) {
     switch (rdbType) {
         case redis_constants_1.REDIS_RDB_TYPE_STRING:

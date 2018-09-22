@@ -62,15 +62,27 @@ export class ReaderDriver {
 
             return t;
         }, {});
+
+        const keyTypes = Object.keys(keyTypeReportData).sort((a, b) => keyTypeReportData[b].size - keyTypeReportData[a].size);
         
-        const keyTypeReport = Object.keys(keyTypeReportData).map((keyType: string) => { 
+        const keyTypeReportParts = keyTypes.map((keyType: string) => { 
             const reportItem: { size: number, count: number } = keyTypeReportData[keyType];
-            return `${keyType}: ${getSizeTitle(reportItem.size)}, ${reportItem.count} keys`;
+            return `${keyType}: ${Math.round(100 * reportItem.size / byteCount)}% (${reportItem.count} keys)`;
         });
 
-        const resultsReport = `Keys: ${keyCount}, Bytes: ${byteCount}\n${keyTypeReport.join("\n")}`;
+        const resultsReportParts = [
+            ``,
+            `Found ${keyCount} keys, estimated ${byteCount} bytes of memory consumption`,
+            ``,
+            `Memory usage by key type:`
+        ].concat(keyTypeReportParts);
 
-        return { resultsReport, keys: this.keys };
+        const maxLineLength = resultsReportParts.reduce((t, i) => Math.max(t, i.length), 0);
+        resultsReportParts.unshift("#".repeat(maxLineLength));
+        resultsReportParts.unshift("");
+        resultsReportParts.push("#".repeat(maxLineLength));
+
+        return { resultsReport: resultsReportParts.join("\n"), keys: this.keys };
     }
 
     private readHeader(): Bluebird<any> { 
@@ -164,11 +176,6 @@ export class ReaderDriver {
             this.keys.push(keyData);
         });
     }
-}
-
-function getSizeTitle(size: number): string { 
-    size = size / MB * 10;
-    return (Math.round(size) / 10) + "MB";
 }
 
 function getRdbTypeTitle(rdbType: number): string { 
