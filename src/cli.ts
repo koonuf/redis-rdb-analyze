@@ -24,12 +24,17 @@ function readDump() {
     const dumpPath = processArgs._[0];
     const resultPath = processArgs._[1];
 
+    if (!dumpPath || !resultPath) { 
+        return printUsage();
+    }
+
     const settings: ISettings = {
         stringEncoding: processArgs.encoding || "utf8"
     };
     
     const reader = new ReaderDriver(dumpPath, settings);
     let readReportProgressTimer: NodeJS.Timer | undefined;
+    let reportsWriter: IReportsWriter;
 
     function logProgress() { 
         rewriteConsoleLine(`Reading dump ${reader.getPercentComplete()}%...`);
@@ -48,6 +53,11 @@ function readDump() {
         
         if (error) {
             rewriteConsoleLine(error);
+
+            if (reportsWriter) {
+                reportsWriter.cancel();
+            }
+
         } else { 
             rewriteConsoleLine("done");
         }
@@ -59,15 +69,13 @@ function readDump() {
     enterCliUi();
     readReportProgressTimer = setInterval(logProgress, 300);
 
-    Bluebird.all([
-        reader.read(),
-        getReportsWriter(resultPath)
-    ]).then((results: [IDumpReadResults, IReportsWriter]) => {
+    getReportsWriter(resultPath)
+        .then((r) => reportsWriter = r)
+        .then(() => reader.read())
+        .then((dumpResults: IDumpReadResults) => {
 
         stopProgressLogging();
 
-        const [dumpResults, reportsWriter] = results;
-        
         rewriteConsoleLine(dumpResults.resultsReport);
         console.log();
         rewriteConsoleLine("Building prefix tree...");
@@ -82,6 +90,10 @@ function readDump() {
         finish();
 
     }).catch(finish);
+}
+
+function printUsage() { 
+    console.log("Usage: redis-rdb-analyze /path/to/rdb/file /path/to/output/folder [-encoding=string encoding]");
 }
 
 function rewriteConsoleLine(message: string) { 

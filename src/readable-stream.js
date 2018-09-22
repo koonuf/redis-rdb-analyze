@@ -30,6 +30,9 @@ class ReadableStream {
                 this.deferred.reject(e);
                 this.resetDeferred();
             }
+            else {
+                this.pendingError = e;
+            }
         });
         this.detectFileSize(filePath);
     }
@@ -42,6 +45,11 @@ class ReadableStream {
         }
     }
     readNext(size) {
+        if (this.pendingError) {
+            const rejection = Bluebird.reject(this.pendingError);
+            this.pendingError = null;
+            return rejection;
+        }
         if (this.isFinished) {
             return this.constructError("Trying to read finished stream");
         }

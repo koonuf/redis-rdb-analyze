@@ -10,17 +10,21 @@ function getReportsWriter(targetDir) {
         const fileOpenFlags = "wx";
         let keysFileDescriptor, prefixTreeFileDescriptor, isRejected = false;
         function doReject(error) {
-            isRejected = true;
-            reject(error);
+            if (!isRejected) {
+                isRejected = true;
+                reject("Error opening output file " + error);
+            }
         }
         function tryResolve() {
             if (!isRejected && keysFileDescriptor && prefixTreeFileDescriptor) {
-                resolve(new ReportsWriter(keysFileDescriptor, prefixTreeFileDescriptor));
+                const keysFile = { descriptor: keysFileDescriptor, path: pathKeys };
+                const prefixTreeFile = { descriptor: prefixTreeFileDescriptor, path: pathPrefixTree };
+                resolve(new ReportsWriter(keysFile, prefixTreeFile));
             }
         }
         fs_1.open(pathKeys, fileOpenFlags, (e, fd) => {
             if (e) {
-                reject(e);
+                doReject(e);
             }
             else {
                 keysFileDescriptor = fd;
@@ -29,7 +33,7 @@ function getReportsWriter(targetDir) {
         });
         fs_1.open(pathPrefixTree, fileOpenFlags, (e, fd) => {
             if (e) {
-                reject(e);
+                doReject(e);
             }
             else {
                 prefixTreeFileDescriptor = fd;
@@ -40,27 +44,46 @@ function getReportsWriter(targetDir) {
 }
 exports.getReportsWriter = getReportsWriter;
 class ReportsWriter {
-    constructor(keysFileDescriptor, prefixTreeFileDescriptor) {
-        this.keysFileDescriptor = keysFileDescriptor;
-        this.prefixTreeFileDescriptor = prefixTreeFileDescriptor;
+    constructor(keysFile, prefixTreeFile) {
+        this.keysFile = keysFile;
+        this.prefixTreeFile = prefixTreeFile;
     }
     write(keys, prefixTree) {
         return new Bluebird((resolve, reject) => {
             let isRejected = false;
             function onWriteEnd(error) {
-                if (this.isRejected) {
+                if (isRejected) {
                     return;
                 }
                 if (error) {
-                    this.isRejected = true;
+                    isRejected = true;
                     reject(error);
                 }
                 else {
                     resolve();
                 }
             }
-            fs_1.writeFile(this.keysFileDescriptor, this.serialize(keys), onWriteEnd);
-            fs_1.writeFile(this.prefixTreeFileDescriptor, this.serialize(prefixTree), onWriteEnd);
+            fs_1.writeFile(this.keysFile.descriptor, this.serialize(keys), onWriteEnd);
+            fs_1.writeFile(this.prefixTreeFile.descriptor, this.serialize(prefixTree), onWriteEnd);
+        });
+    }
+    cancel() {
+        return new Bluebird((resolve, reject) => {
+            let isRejected = false;
+            function unlinkEnd(error) {
+                if (isRejected) {
+                    return;
+                }
+                if (error) {
+                    isRejected = true;
+                    reject(error);
+                }
+                else {
+                    resolve();
+                }
+            }
+            fs_1.unlink(this.keysFile.path, unlinkEnd);
+            fs_1.unlink(this.prefixTreeFile.path, unlinkEnd);
         });
     }
     serialize(data) {

@@ -15,6 +15,7 @@ export class ReadableStream {
 
     private deferred: Bluebird.Resolver<Buffer> | null;
     private pendingReadSize: number;
+    private pendingError: any;
 
     private position: number = 0;
     private lastReadSize: number;
@@ -46,9 +47,11 @@ export class ReadableStream {
         this.stream.on("error", (e) => {
             this.isFinished = true;
 
-            if (this.deferred) { 
+            if (this.deferred) {
                 this.deferred.reject(e);
                 this.resetDeferred();
+            } else { 
+                this.pendingError = e;
             }
         });
 
@@ -66,6 +69,12 @@ export class ReadableStream {
     }
 
     readNext(size: number): Bluebird<Buffer> { 
+
+        if (this.pendingError) { 
+            const rejection = Bluebird.reject(this.pendingError);
+            this.pendingError = null;
+            return rejection;
+        }
 
         if (this.isFinished) { 
             return this.constructError("Trying to read finished stream");

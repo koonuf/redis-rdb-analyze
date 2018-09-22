@@ -4,7 +4,6 @@ const reader_driver_1 = require("./reader-driver");
 const reports_writer_1 = require("./reports-writer");
 const key_trie_1 = require("./data-structures/key-trie");
 const readline = require("readline");
-const Bluebird = require("bluebird");
 const parseArgs = require("minimist");
 function getPrefixTree(keys) {
     const keyTrie = new key_trie_1.KeyTrie();
@@ -17,11 +16,15 @@ function readDump() {
     const processArgs = parseArgs(process.argv.slice(2));
     const dumpPath = processArgs._[0];
     const resultPath = processArgs._[1];
+    if (!dumpPath || !resultPath) {
+        return printUsage();
+    }
     const settings = {
         stringEncoding: processArgs.encoding || "utf8"
     };
     const reader = new reader_driver_1.ReaderDriver(dumpPath, settings);
     let readReportProgressTimer;
+    let reportsWriter;
     function logProgress() {
         rewriteConsoleLine(`Reading dump ${reader.getPercentComplete()}%...`);
     }
@@ -35,6 +38,9 @@ function readDump() {
         stopProgressLogging();
         if (error) {
             rewriteConsoleLine(error);
+            if (reportsWriter) {
+                reportsWriter.cancel();
+            }
         }
         else {
             rewriteConsoleLine("done");
@@ -44,12 +50,11 @@ function readDump() {
     }
     enterCliUi();
     readReportProgressTimer = setInterval(logProgress, 300);
-    Bluebird.all([
-        reader.read(),
-        reports_writer_1.getReportsWriter(resultPath)
-    ]).then((results) => {
+    reports_writer_1.getReportsWriter(resultPath)
+        .then((r) => reportsWriter = r)
+        .then(() => reader.read())
+        .then((dumpResults) => {
         stopProgressLogging();
-        const [dumpResults, reportsWriter] = results;
         rewriteConsoleLine(dumpResults.resultsReport);
         console.log();
         rewriteConsoleLine("Building prefix tree...");
@@ -59,6 +64,9 @@ function readDump() {
     }).then(() => {
         finish();
     }).catch(finish);
+}
+function printUsage() {
+    console.log("Usage: redis-rdb-analyze /path/to/rdb/file /path/to/output/folder [-encoding=string encoding]");
 }
 function rewriteConsoleLine(message) {
     const CURSOR_LINE_START = "\u001b[0G";

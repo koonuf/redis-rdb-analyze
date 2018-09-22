@@ -1,5 +1,5 @@
 import * as Bluebird from "bluebird";
-import { open as fileOpen, writeFile } from "fs";
+import { open as fileOpen, writeFile, unlink } from "fs";
 import { IKey, IPrefixTreeNode } from "./schemas";
 import { join as pathJoin } from "path";
 
@@ -16,19 +16,25 @@ export function getReportsWriter(targetDir: string): Bluebird<IReportsWriter> {
             isRejected = false;
         
         function doReject(error: any) { 
-            isRejected = true;
-            reject(error);
+            if (!isRejected) {
+                isRejected = true;
+                reject("Error opening output file " + error);
+            }
         }
 
         function tryResolve() { 
             if (!isRejected && keysFileDescriptor && prefixTreeFileDescriptor) { 
-                resolve(new ReportsWriter(keysFileDescriptor, prefixTreeFileDescriptor));
+
+                const keysFile: IFile = { descriptor: keysFileDescriptor, path: pathKeys };
+                const prefixTreeFile: IFile = { descriptor: prefixTreeFileDescriptor, path: pathPrefixTree };
+
+                resolve(new ReportsWriter(keysFile, prefixTreeFile));
             }
         }
 
         fileOpen(pathKeys, fileOpenFlags, (e, fd) => { 
             if (e) {
-                reject(e);
+                doReject(e);
             } else { 
                 keysFileDescriptor = fd;
                 tryResolve();
@@ -37,7 +43,7 @@ export function getReportsWriter(targetDir: string): Bluebird<IReportsWriter> {
 
         fileOpen(pathPrefixTree, fileOpenFlags, (e, fd) => { 
             if (e) {
-                reject(e);
+                doReject(e);
             } else { 
                 prefixTreeFileDescriptor = fd;
                 tryResolve();
@@ -49,11 +55,12 @@ export function getReportsWriter(targetDir: string): Bluebird<IReportsWriter> {
 
 export interface IReportsWriter { 
     write: (keys: IKey[], prefixTree: IPrefixTreeNode[]) => Bluebird<any>;
+    cancel: () => Bluebird<any>;
 }
 
 class ReportsWriter implements IReportsWriter {
 
-    constructor(private keysFileDescriptor: number, private prefixTreeFileDescriptor: number) { 
+    constructor(private keysFile: IFile, private prefixTreeFile: IFile) { 
     }
 
     write(keys: IKey[], prefixTree: IPrefixTreeNode[]): Bluebird<any> {
@@ -63,24 +70,52 @@ class ReportsWriter implements IReportsWriter {
             let isRejected = false;
 
             function onWriteEnd(error?: any) { 
-                if (this.isRejected) { 
+                if (isRejected) { 
                     return;
                 }
 
                 if (error) {
-                    this.isRejected = true;
+                    isRejected = true;
                     reject(error);
                 } else { 
                     resolve();
                 }
             }
 
-            writeFile(this.keysFileDescriptor, this.serialize(keys), onWriteEnd);
-            writeFile(this.prefixTreeFileDescriptor, this.serialize(prefixTree), onWriteEnd);
+            writeFile(this.keysFile.descriptor, this.serialize(keys), onWriteEnd);
+            writeFile(this.prefixTreeFile.descriptor, this.serialize(prefixTree), onWriteEnd);
+        });
+    }
+
+    cancel() { 
+        return new Bluebird<any>((resolve, reject) => { 
+
+            let isRejected = false;
+
+            function unlinkEnd(error?: any) { 
+                if (isRejected) { 
+                    return;
+                }
+
+                if (error) {
+                    isRejected = true;
+                    reject(error);
+                } else { 
+                    resolve();
+                }
+            }
+
+            unlink(this.keysFile.path, unlinkEnd);
+            unlink(this.prefixTreeFile.path, unlinkEnd);
         });
     }
 
     private serialize(data: any): string { 
         return JSON.stringify(data, null, " ");
     }
+}
+
+interface IFile { 
+    descriptor: number;
+    path: string;
 }
