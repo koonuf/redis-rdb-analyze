@@ -10,7 +10,7 @@ export interface IKey {
 
 export interface IPrefixTreeNode { 
     prefix?: string;
-    memoryConsumptionPercent?: string;
+    memory?: string;
     children?: IPrefixTreeNode[];
 }
 

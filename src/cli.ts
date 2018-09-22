@@ -4,10 +4,7 @@ import { getReportsWriter, IReportsWriter } from "./reports-writer";
 import { KeyTrie } from "./data-structures/key-trie";
 import * as readline from "readline";
 import * as Bluebird from "bluebird";
-
-const settings: ISettings = {
-    stringEncoding: "utf8"
-};
+import * as parseArgs from "minimist";
 
 function getPrefixTree(keys: IKey[]): IPrefixTreeNode[] { 
 
@@ -22,8 +19,14 @@ function getPrefixTree(keys: IKey[]): IPrefixTreeNode[] {
 
 function readDump() { 
 
-    const dumpPath = process.argv[2];
-    const resultPath = process.argv[3];
+    const processArgs = parseArgs(process.argv.slice(2));
+
+    const dumpPath = processArgs._[0];
+    const resultPath = processArgs._[1];
+
+    const settings: ISettings = {
+        stringEncoding: processArgs.encoding || "utf8"
+    };
     
     const reader = new ReaderDriver(dumpPath, settings);
     let readReportProgressTimer: NodeJS.Timer | undefined;
@@ -32,7 +35,7 @@ function readDump() {
         rewriteConsoleLine(`Reading dump ${reader.getPercentComplete()}%...`);
     }
 
-    function stopLogProgress() { 
+    function stopProgressLogging() { 
         if (readReportProgressTimer) { 
             clearInterval(readReportProgressTimer);
             readReportProgressTimer = undefined;
@@ -41,7 +44,7 @@ function readDump() {
 
     function finish(error?: any) { 
         
-        stopLogProgress();
+        stopProgressLogging();
         
         if (error) {
             rewriteConsoleLine(error);
@@ -61,7 +64,7 @@ function readDump() {
         getReportsWriter(resultPath)
     ]).then((results: [IDumpReadResults, IReportsWriter]) => {
 
-        stopLogProgress();
+        stopProgressLogging();
 
         const [dumpResults, reportsWriter] = results;
         
@@ -72,10 +75,12 @@ function readDump() {
         const tree = getPrefixTree(dumpResults.keys);
 
         rewriteConsoleLine("Writing reports...");
-        reportsWriter.write(dumpResults.keys, tree);
-
+        return reportsWriter.write(dumpResults.keys, tree);
+      
+    }).then(() => { 
+        
         finish();
-            
+
     }).catch(finish);
 }
 
@@ -90,7 +95,7 @@ function enterCliUi() {
     readline.emitKeypressEvents(process.stdin);
     process.stdin.setRawMode!(true);
     
-    process.stdin.on('keypress', (str, key) => {
+    process.stdin.on("keypress", (str, key) => {
         if (key && key.sequence === "\u0003") {
             console.log();
             process.exit(0);

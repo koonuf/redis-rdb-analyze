@@ -1,10 +1,10 @@
 {
   "name": "redis-rdb-analyze",
-  "version": "0.0.6",
-  "description": "",
+  "version": "0.0.7",
+  "description": "Read RDB files to analyze Redis keyspace memory consumption",
   "author": "Konstantins Onufrijevs",
   "license": "MIT",
-  "main": "redis-rdb-analyze.js",
+  "main": "./src/cli.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/koonuf/redis-rdb-analyze.git"
@@ -14,9 +14,11 @@
   },
   "dependencies": {
     "@types/bluebird": "^3.5.24",
+    "@types/minimist": "^1.2.0",
     "@types/node": "^10.9.4",
     "bluebird": "3.5.2",
     "lzfjs": "1.0.1",
+    "minimist": "^1.2.0",
     "typescript": "^3.0.3"
   },
   "devDependencies": {
@@ -25,7 +27,10 @@
     "expect": "^1.19.0",
     "mocha": "^3.5.0"
   },
-  "keywords": [],
+  "keywords": [
+    "redis",
+    "rdb"
+  ],
   "bugs": {
     "url": "https://github.com/koonuf/redis-rdb-analyze/issues"
   },

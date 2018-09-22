@@ -77,7 +77,7 @@ class TrieNode {
         }
         return {
             prefix: fullPath,
-            memoryConsumptionPercent: percent,
+            memory: percent,
             children: resultChildren
         };
     }
