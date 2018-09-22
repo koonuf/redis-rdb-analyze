@@ -70,17 +70,25 @@ export class ReaderDriver {
             return `${keyType}: ${Math.round(100 * reportItem.size / byteCount)}% (${reportItem.count} keys)`;
         });
 
+        const GREEN = "\u001b[97m\u001b[42m";
+        const RED = "\u001b[97m\u001b[41m";
+        const COLOR_RESET = "\u001b[0m";
+
         const resultsReportParts = [
             ``,
-            `Found ${keyCount} keys, estimated ${byteCount} bytes of memory consumption`,
+            `${RED}Found ${keyCount} keys, estimated ${byteCount} bytes of memory consumption${COLOR_RESET}`,
             ``,
             `Memory usage by key type:`
         ].concat(keyTypeReportParts);
 
         const maxLineLength = resultsReportParts.reduce((t, i) => Math.max(t, i.length), 0);
-        resultsReportParts.unshift("#".repeat(maxLineLength));
+        
+        resultsReportParts.unshift(GREEN + "#".repeat(maxLineLength) + COLOR_RESET);
         resultsReportParts.unshift("");
-        resultsReportParts.push("#".repeat(maxLineLength));
+
+        resultsReportParts.push("");
+        resultsReportParts.push(GREEN + "#".repeat(maxLineLength) + COLOR_RESET);
+        resultsReportParts.push("");
 
         return { resultsReport: resultsReportParts.join("\n"), keys: this.keys };
     }
