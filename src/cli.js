@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const reader_driver_1 = require("./reader-driver");
 const reports_writer_1 = require("./reports-writer");
-const key_trie_1 = require("./data-structures/key-trie");
+const key_trie_1 = require("./key-trie");
 const readline = require("readline");
 const parseArgs = require("minimist");
 function getPrefixTree(keys) {

@@ -10,6 +10,7 @@ class KeyTrie {
     compact() {
         const fullSize = this.rootNode.getSize();
         const minSize = fullSize / 100;
+        console.log(JSON.stringify(this, null, " "));
         this.rootNode.compact(minSize);
         return this.rootNode.walk([], fullSize).children;
     }
@@ -22,41 +23,54 @@ class TrieNode {
     getSize() {
         return this.size;
     }
-    compact(minSize, parentNode, parentKey) {
+    compact(minSize, parentNode, parentKey, parentKeyCount) {
         if (!this.children) {
             return;
         }
-        let keys = Object.keys(this.children);
-        for (const key of keys) {
+        let childKeys = Object.keys(this.children);
+        let childKeyCount = childKeys.length;
+        for (const key of childKeys) {
             if (this.children[key].size < minSize) {
                 delete this.children[key];
+                childKeyCount--;
             }
         }
-        keys = Object.keys(this.children);
-        if (keys.length === 1) {
-            let key = keys[0];
+        if (!childKeyCount) {
+            delete this.children;
+            return;
+        }
+        childKeys = Object.keys(this.children);
+        if (childKeys.length === 1) {
+            let key = childKeys[0];
             const child = this.children[key];
             if (parentNode && parentKey) {
                 key = parentKey + key;
                 delete parentNode.children[parentKey];
+                child.size = this.size;
                 parentNode.children[key] = child;
             }
             child.compact(minSize, parentNode || this, key);
         }
         else {
-            for (const key of keys) {
+            for (const key of childKeys) {
                 this.children[key].compact(minSize, this, key);
             }
         }
     }
     addKey(keyData, position) {
-        this.size += keyData.size;
-        if (position >= keyData.key.length) {
+        const remainingChars = keyData.key.length - 1 - position;
+        if (remainingChars < 0) {
             throw new Error(`past key length for ${keyData.key}`);
         }
-        else if (position < (keyData.key.length - 1)) {
+        this.size += keyData.size;
+        if (remainingChars >= 0) {
             const childNode = this.ensureChildNode(keyData, position);
-            childNode.addKey(keyData, position + 1);
+            if (remainingChars >= 1) {
+                childNode.addKey(keyData, position + 1);
+            }
+            else {
+                childNode.size += keyData.size;
+            }
         }
     }
     walk(parentKeyParts, fullSize) {
@@ -93,13 +107,5 @@ class TrieNode {
         }
         return childTrieNode;
     }
-}
-function getPrefixCandidate(keyChars, size) {
-    const weight = keyChars.length * size;
-    return {
-        prefix: keyChars.join(""),
-        size,
-        weight
-    };
 }
 //# sourceMappingURL=key-trie.js.map

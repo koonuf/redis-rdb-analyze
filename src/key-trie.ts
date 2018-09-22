@@ -1,4 +1,4 @@
-import { IKey, IPrefixTreeNode } from "../schemas";
+import { IKey, IPrefixTreeNode } from "./schemas";
 
 export class KeyTrie { 
     
@@ -12,6 +12,8 @@ export class KeyTrie {
 
         const fullSize = this.rootNode.getSize();
         const minSize = fullSize / 100;
+
+        console.log(JSON.stringify(this, null, " "));
 
         this.rootNode.compact(minSize);
         
@@ -28,25 +30,32 @@ class TrieNode {
         return this.size;
     }
 
-    compact(minSize: number, parentNode?: TrieNode, parentKey?: string) {
+    compact(minSize: number, parentNode?: TrieNode, parentKey?: string, parentKeyCount?: number) {
 
         if (!this.children) {
             return;
         }
 
-        let keys = Object.keys(this.children);
+        let childKeys = Object.keys(this.children);
+        let childKeyCount = childKeys.length;
 
-        for (const key of keys) {
+        for (const key of childKeys) {
             if (this.children[key].size < minSize) {
                 delete this.children[key];
+                childKeyCount--;
             }
         }
 
-        keys = Object.keys(this.children);
+        if (!childKeyCount) { 
+            delete this.children;
+            return;
+        }
 
-        if (keys.length === 1) {
+        childKeys = Object.keys(this.children);
 
-            let key = keys[0];
+        if (childKeys.length === 1) {
+
+            let key = childKeys[0];
             const child = this.children[key];
 
             if (parentNode && parentKey) {
@@ -54,6 +63,7 @@ class TrieNode {
                 key = parentKey + key;
 
                 delete parentNode.children![parentKey];
+                child.size = this.size;
                 parentNode.children![key] = child;
             }
 
@@ -61,7 +71,7 @@ class TrieNode {
             
         } else {
 
-            for (const key of keys) {
+            for (const key of childKeys) {
                 this.children[key].compact(minSize, this, key);
             }
         }
@@ -69,15 +79,24 @@ class TrieNode {
 
     addKey(keyData: IKey, position: number) { 
 
+        const remainingChars = keyData.key.length - 1 - position;
+
+        if (remainingChars < 0) {
+            throw new Error(`past key length for ${keyData.key}`);
+        }
+
         this.size += keyData.size;
         
-        if (position >= keyData.key.length) {
-            throw new Error(`past key length for ${keyData.key}`);
-
-        } else if (position < (keyData.key.length - 1)) {
+        if (remainingChars >= 0) {
             const childNode = this.ensureChildNode(keyData, position);
-            childNode.addKey(keyData, position + 1);
-        }
+            
+            if (remainingChars >= 1) {
+                childNode.addKey(keyData, position + 1);
+
+            } else { 
+                childNode.size += keyData.size;
+            }
+        } 
     }
 
     walk(parentKeyParts: string[], fullSize: number): IPrefixTreeNode {
@@ -133,21 +152,4 @@ class TrieNode {
 
 interface ITrieChildren { 
     [keyChar: string]: TrieNode;
-}
-
-function getPrefixCandidate(keyChars: string[], size: number): IPrefixCandidate { 
-    
-    const weight = keyChars.length * size;
-
-    return {
-        prefix: keyChars.join(""),
-        size,
-        weight
-    };
-}
-
-interface IPrefixCandidate { 
-    prefix: string;
-    size: number;
-    weight: number;
 }

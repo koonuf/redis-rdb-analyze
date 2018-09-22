@@ -1,7 +1,7 @@
 import { ISettings, IKey, IDumpReadResults, IPrefixTreeNode } from "./schemas";
 import { ReaderDriver } from "./reader-driver";
 import { getReportsWriter, IReportsWriter } from "./reports-writer";
-import { KeyTrie } from "./data-structures/key-trie";
+import { KeyTrie } from "./key-trie";
 import * as readline from "readline";
 import * as Bluebird from "bluebird";
 import * as parseArgs from "minimist";
