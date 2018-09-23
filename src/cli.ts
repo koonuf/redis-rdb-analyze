@@ -14,7 +14,7 @@ function getPrefixTree(keys: IKey[]): IPrefixTreeNode[] {
         keyTrie.addKey(key);
     }
 
-    return keyTrie.compact();
+    return keyTrie.getCompactTree();
 }
 
 function readDump() { 

@@ -10,7 +10,7 @@ function getPrefixTree(keys) {
     for (const key of keys) {
         keyTrie.addKey(key);
     }
-    return keyTrie.compact();
+    return keyTrie.getCompactTree();
 }
 function readDump() {
     const processArgs = parseArgs(process.argv.slice(2));

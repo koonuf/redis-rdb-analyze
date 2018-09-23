@@ -7,12 +7,11 @@ class KeyTrie {
     addKey(keyData) {
         this.rootNode.addKey(keyData, 0);
     }
-    compact() {
+    getCompactTree() {
         const fullSize = this.rootNode.getSize();
         const minSize = fullSize / 100;
-        console.log(JSON.stringify(this, null, " "));
         this.rootNode.compact(minSize);
-        return this.rootNode.walk([], fullSize).children;
+        return this.rootNode.getCompactNode([], fullSize).children;
     }
 }
 exports.KeyTrie = KeyTrie;
@@ -40,7 +39,7 @@ class TrieNode {
             return;
         }
         childKeys = Object.keys(this.children);
-        if (childKeys.length === 1) {
+        if (childKeys.length === 1 && !this.isLeaf) {
             let key = childKeys[0];
             const child = this.children[key];
             if (parentNode && parentKey) {
@@ -70,10 +69,11 @@ class TrieNode {
             }
             else {
                 childNode.size += keyData.size;
+                childNode.isLeaf = true;
             }
         }
     }
-    walk(parentKeyParts, fullSize) {
+    getCompactNode(parentKeyParts, fullSize) {
         const percent = Math.round(100 * this.size / fullSize) + "%";
         const fullPath = parentKeyParts.join("");
         let resultChildren = undefined;
@@ -85,15 +85,18 @@ class TrieNode {
             for (const key of keys) {
                 const child = this.children[key];
                 parentKeyParts[lastIndex] = key;
-                resultChildren.push(child.walk(parentKeyParts, fullSize));
+                resultChildren.push(child.getCompactNode(parentKeyParts, fullSize));
             }
             parentKeyParts.pop();
         }
-        return {
+        const result = {
             prefix: fullPath,
-            memory: percent,
-            children: resultChildren
+            memory: percent
         };
+        if (resultChildren) {
+            result.children = resultChildren;
+        }
+        return result;
     }
     ensureChildNode(keyData, position) {
         if (!this.children) {

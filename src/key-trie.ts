@@ -8,22 +8,21 @@ export class KeyTrie {
         this.rootNode.addKey(keyData, 0);
     }
 
-    compact(): IPrefixTreeNode[] { 
+    getCompactTree(): IPrefixTreeNode[] { 
 
         const fullSize = this.rootNode.getSize();
         const minSize = fullSize / 100;
 
-        console.log(JSON.stringify(this, null, " "));
-
         this.rootNode.compact(minSize);
         
-        return this.rootNode.walk([], fullSize).children!;
+        return this.rootNode.getCompactNode([], fullSize).children!;
     }
 }
 
 class TrieNode { 
     
     private children?: ITrieChildren;
+    private isLeaf?: boolean;
     private size = 0;
 
     getSize(): number { 
@@ -53,7 +52,7 @@ class TrieNode {
 
         childKeys = Object.keys(this.children);
 
-        if (childKeys.length === 1) {
+        if (childKeys.length === 1 && !this.isLeaf) {
 
             let key = childKeys[0];
             const child = this.children[key];
@@ -95,11 +94,12 @@ class TrieNode {
 
             } else { 
                 childNode.size += keyData.size;
+                childNode.isLeaf = true;
             }
         } 
     }
 
-    walk(parentKeyParts: string[], fullSize: number): IPrefixTreeNode {
+    getCompactNode(parentKeyParts: string[], fullSize: number): IPrefixTreeNode {
 
         const percent = Math.round(100 * this.size / fullSize) + "%";
         const fullPath = parentKeyParts.join("");
@@ -119,17 +119,22 @@ class TrieNode {
                 const child = this.children[key];
                 parentKeyParts[lastIndex] = key;
                 
-                resultChildren.push(child.walk(parentKeyParts, fullSize));
+                resultChildren.push(child.getCompactNode(parentKeyParts, fullSize));
             }
 
             parentKeyParts.pop();
         }
 
-        return {
+        const result: IPrefixTreeNode = {
             prefix: fullPath,
-            memory: percent,
-            children: resultChildren
+            memory: percent
         };
+
+        if (resultChildren) { 
+            result.children = resultChildren;
+        }
+
+        return result;
     }
 
     private ensureChildNode(keyData: IKey, position: number): TrieNode { 
