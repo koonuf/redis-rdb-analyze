@@ -4,7 +4,7 @@ const expect = require("expect");
 const key_trie_1 = require("../src/key-trie");
 describe("key trie", function () {
     function getPercent(val) {
-        return Math.round(val * 100) + "%";
+        return (Math.round(val * 1000) / 10) + "%";
     }
     it("works with single item", () => {
         const trie = new key_trie_1.KeyTrie();

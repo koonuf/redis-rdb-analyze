@@ -9,7 +9,7 @@ class KeyTrie {
     }
     getCompactTree() {
         const fullSize = this.rootNode.getSize();
-        const minSize = fullSize / 100;
+        const minSize = fullSize / 1000;
         this.rootNode.compact(minSize);
         return this.rootNode.getCompactNode([], fullSize).children;
     }
@@ -74,7 +74,7 @@ class TrieNode {
         }
     }
     getCompactNode(parentKeyParts, fullSize) {
-        const percent = Math.round(100 * this.size / fullSize) + "%";
+        const percent = (Math.round(1000 * this.size / fullSize) / 10) + "%";
         const fullPath = parentKeyParts.join("");
         let resultChildren = undefined;
         if (this.children) {

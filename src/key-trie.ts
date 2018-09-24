@@ -11,7 +11,7 @@ export class KeyTrie {
     getCompactTree(): IPrefixTreeNode[] { 
 
         const fullSize = this.rootNode.getSize();
-        const minSize = fullSize / 100;
+        const minSize = fullSize / 1000;
 
         this.rootNode.compact(minSize);
         
@@ -101,7 +101,7 @@ class TrieNode {
 
     getCompactNode(parentKeyParts: string[], fullSize: number): IPrefixTreeNode {
 
-        const percent = Math.round(100 * this.size / fullSize) + "%";
+        const percent = (Math.round(1000 * this.size / fullSize) / 10) + "%";
         const fullPath = parentKeyParts.join("");
 
         let resultChildren: IPrefixTreeNode[] | undefined = undefined;

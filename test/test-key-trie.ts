@@ -5,7 +5,7 @@ import { IKey, IPrefixTreeNode } from "../src/schemas";
 describe("key trie", function () {
 
     function getPercent(val: number): string { 
-        return Math.round(val * 100) + "%";
+        return (Math.round(val * 1000) / 10) + "%";
     }
 
     it("works with single item", () => { 
