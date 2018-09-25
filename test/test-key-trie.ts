@@ -1,6 +1,5 @@
 import * as expect from "expect";
 import { KeyTrie } from "../src/key-trie";
-import { IKey, IPrefixTreeNode } from "../src/schemas";
 
 describe("key trie", function () {
 
