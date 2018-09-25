@@ -57,7 +57,11 @@ class ReaderDriver {
         resultsReportParts.push("");
         resultsReportParts.push(GREEN + "#".repeat(maxLineLength) + COLOR_RESET);
         resultsReportParts.push("");
-        return { resultsReport: resultsReportParts.join("\n"), keys: this.keys };
+        return {
+            byteCount,
+            resultsReport: resultsReportParts.join("\n"),
+            keys: this.keys
+        };
     }
     readHeader() {
         return this.stream.readNext(HEADER_SIZE).then((buffer) => {

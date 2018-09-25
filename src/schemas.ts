@@ -15,6 +15,7 @@ export interface IPrefixTreeNode {
 }
 
 export class IDumpReadResults { 
+    byteCount: number;
     keys: IKey[];
     resultsReport: string;
 }

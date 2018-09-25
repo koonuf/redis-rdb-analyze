@@ -90,7 +90,11 @@ export class ReaderDriver {
         resultsReportParts.push(GREEN + "#".repeat(maxLineLength) + COLOR_RESET);
         resultsReportParts.push("");
 
-        return { resultsReport: resultsReportParts.join("\n"), keys: this.keys };
+        return {
+            byteCount,
+            resultsReport: resultsReportParts.join("\n"),
+            keys: this.keys
+        };
     }
 
     private readHeader(): Bluebird<any> { 
