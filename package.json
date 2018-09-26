@@ -1,6 +1,6 @@
 {
   "name": "redis-rdb-analyze",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Read RDB files to analyze Redis keyspace memory consumption",
   "author": "Konstantins Onufrijevs",
   "license": "MIT",

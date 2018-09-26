@@ -3,8 +3,7 @@ import * as Bluebird from "bluebird";
 import { ISettings, IKey } from "../schemas";
 
 import {
-    SIZE_LONG, SIZE_OBJECT,
-    SIZE_STRING_HEADER, LONG_MIN, LONG_MAX, SIZE_POINTER,
+    SIZE_OBJECT, SIZE_STRING_HEADER, LONG_MIN, LONG_MAX, SIZE_POINTER,
     KB, MB
 } from "../size-constants";
 

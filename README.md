@@ -3,10 +3,22 @@
 ## What can it do?
 It can parse Redis RDB files (named dump.rdb by default) and estimate how much memory does each key contribute to the memory consumption of a Redis instance.
 
+## Installation
+
+```
+> npm install redis-rdb-analyze -g
+```
+
+## Usage
+
+```
+> redis-rdb-analyze /path/to/rdb/file /path/to/output/folder [-encoding=string encoding]
+```
+
 ## Outputs?
 Currently, this module produces 2 JSON files:
-* List of keys with name, key type and estimated memory consumption
-* Prefix tree, containing all key prefixes, except those, which constitute 1/1000 of the keyspace
+* List of keys with name, key type and estimated memory consumption (numbers are bytes)
+* Prefix tree, containing all key prefixes, except those which represent less than 1/1000 of the keyspace (this helps making the prefix tree readable in text editors)
 
 ### Key list example
 
@@ -60,14 +72,21 @@ Currently, this module produces 2 JSON files:
 ]
 ```
 
-## Installation
+## Redis/RDB version support
+Currently, this module only supports RDB version 6 and Redis 3.0.x. Each version of Redis slightly changes/optimizes internal
+data structures and memory allocation patterns. Also, the default memory allocator (jemalloc) might change its memory block sizes,
+which affects memory usage estimation precision.
 
-```
-> npm install redis-rdb-analyze -g
-```
+## The precision of memory usage estimates
+The idea of this module is to try to break down the memory consumption, as reported by Redis INFO command, into individual keys and 
+key prefixes. It should help understanding where is memory consumed so that memory usage could be optimized. 
 
-## Usage
+This module is based on the source code of Redis and it tries to emulate the logic of RDB load process. It also takes into account 
+jemalloc memory block sizes, so estimates are as close to real life as possible (apart from yet unfixed bugs). 
+My tests with production keyspaces of different sizes show that this module is about 99.5% close to what is actually reported by Redis
+after it is restarted with corresponding RDB file.
 
-```
-> redis-rdb-analyze /path/to/rdb/file /path/to/output/folder [-encoding=string encoding]
-```
+Unfortunately its impossible to be 100% precise, especially if large sorted sets are involved, as there is a randomization algorithm in the level each skiplist entry is assigned to.
+
+## CLI arguments
+Currently, only one optional parameter (string encoding) is supported. It is "utf8" by default, which is the string encoding used by node.js Redis client, so it can be safely omitted.
