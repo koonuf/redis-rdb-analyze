@@ -17,9 +17,7 @@ function getReportsWriter(targetDir) {
         }
         function tryResolve() {
             if (!isRejected && keysFileDescriptor && prefixTreeFileDescriptor) {
-                const keysFile = { descriptor: keysFileDescriptor, path: pathKeys };
-                const prefixTreeFile = { descriptor: prefixTreeFileDescriptor, path: pathPrefixTree };
-                resolve(new ReportsWriter(keysFile, prefixTreeFile));
+                resolve(new ReportsWriter(pathKeys, pathPrefixTree));
             }
         }
         fs_1.open(pathKeys, fileOpenFlags, (e, fd) => {
@@ -44,9 +42,9 @@ function getReportsWriter(targetDir) {
 }
 exports.getReportsWriter = getReportsWriter;
 class ReportsWriter {
-    constructor(keysFile, prefixTreeFile) {
-        this.keysFile = keysFile;
-        this.prefixTreeFile = prefixTreeFile;
+    constructor(keysFilePath, prefixTreeFilePath) {
+        this.keysFilePath = keysFilePath;
+        this.prefixTreeFilePath = prefixTreeFilePath;
     }
     write(keys, prefixTree) {
         return new Bluebird((resolve, reject) => {
@@ -63,8 +61,8 @@ class ReportsWriter {
                     resolve();
                 }
             }
-            fs_1.writeFile(this.keysFile.descriptor, this.serialize(keys), onWriteEnd);
-            fs_1.writeFile(this.prefixTreeFile.descriptor, this.serialize(prefixTree), onWriteEnd);
+            fs_1.writeFile(this.keysFilePath, this.serialize(keys), onWriteEnd);
+            fs_1.writeFile(this.prefixTreeFilePath, this.serialize(prefixTree), onWriteEnd);
         });
     }
     cancel() {
@@ -82,8 +80,8 @@ class ReportsWriter {
                     resolve();
                 }
             }
-            fs_1.unlink(this.keysFile.path, unlinkEnd);
-            fs_1.unlink(this.prefixTreeFile.path, unlinkEnd);
+            fs_1.unlink(this.keysFilePath, unlinkEnd);
+            fs_1.unlink(this.prefixTreeFilePath, unlinkEnd);
         });
     }
     serialize(data) {
