@@ -7,26 +7,26 @@ class DictionaryAllocator {
         this.capacity = 0;
         this.entryCount = 0;
     }
-    createDictionary(reader) {
-        reader.allocateMemory(size_constants_1.SIZE_DICT);
+    createDictionary(allocator) {
+        allocator.allocateMemory(size_constants_1.SIZE_DICT);
     }
     addEntry(reader) {
         this.expandIfNeeded(reader);
         this.entryCount++;
         reader.allocateMemory(size_constants_1.SIZE_DICT_ENTRY);
     }
-    expandIfNeeded(reader) {
+    expandIfNeeded(allocator) {
         if (!this.capacity) {
             this.capacity = redis_constants_1.DICT_HT_INITIAL_SIZE;
-            this.allocateMemory(reader, this.capacity);
+            this.allocateMemory(allocator, this.capacity);
         }
         else if (this.entryCount >= this.capacity) {
-            this.allocateMemory(reader, this.capacity);
+            this.allocateMemory(allocator, this.capacity);
             this.capacity *= 2;
         }
     }
-    allocateMemory(reader, entryCount) {
-        reader.allocateMemory(entryCount * size_constants_1.SIZE_POINTER);
+    allocateMemory(allocator, entryCount) {
+        allocator.allocateMemory(entryCount * size_constants_1.SIZE_POINTER);
     }
 }
 exports.DictionaryAllocator = DictionaryAllocator;

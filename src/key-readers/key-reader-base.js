@@ -1,31 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const allocator_1 = require("./allocator");
 const size_constants_1 = require("../size-constants");
 const redis_constants_1 = require("../redis-constants");
 const lzf = require("lzfjs");
-class KeyReaderBase {
+class KeyReaderBase extends allocator_1.Allocator {
     constructor(stream, settings) {
+        super();
         this.stream = stream;
         this.settings = settings;
-        this.usedMemoryBytes = 0;
     }
     read(keyType) {
         return this.readKey().then(() => this.readValue()).then(() => {
             const result = {
                 key: this.key,
-                size: this.usedMemoryBytes,
+                size: this.getUsedMemoryBytes(),
                 keyType
             };
             return result;
         });
-    }
-    allocateMemory(byteCount) {
-        const alignBy = findMemoryBlockAlignment(byteCount);
-        if (byteCount & (alignBy - 1)) {
-            byteCount += (alignBy - (byteCount & (alignBy - 1)));
-        }
-        this.usedMemoryBytes += byteCount;
-        return byteCount;
     }
     readString(p) {
         return this.stream.readRdbLength().then((lengthData) => {
@@ -146,24 +139,6 @@ class KeyReaderBase {
     }
 }
 exports.KeyReaderBase = KeyReaderBase;
-function findMemoryBlockAlignment(size) {
-    for (const item of blockAlignSizes) {
-        if (size >= item.breakingPoint) {
-            return item.alignBy;
-        }
-    }
-    return 8;
-}
-const blockAlignSizes = [
-    { breakingPoint: 4 * size_constants_1.MB, alignBy: 4 * size_constants_1.MB },
-    { breakingPoint: 4 * size_constants_1.KB, alignBy: 4 * size_constants_1.KB },
-    { breakingPoint: 2 * size_constants_1.KB, alignBy: 512 },
-    { breakingPoint: size_constants_1.KB, alignBy: 256 },
-    { breakingPoint: 512, alignBy: 128 },
-    { breakingPoint: 256, alignBy: 64 },
-    { breakingPoint: 128, alignBy: 32 },
-    { breakingPoint: 16, alignBy: 16 }
-];
 var SkipAllocationsType;
 (function (SkipAllocationsType) {
     SkipAllocationsType[SkipAllocationsType["All"] = 1] = "All";

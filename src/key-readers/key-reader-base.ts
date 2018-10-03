@@ -1,10 +1,10 @@
 import { ReadableStream, IRdbLength } from "../readable-stream";
 import * as Bluebird from "bluebird";
 import { ISettings, IKey } from "../schemas";
+import { Allocator } from "./allocator";
 
 import {
-    SIZE_OBJECT, SIZE_STRING_HEADER, LONG_MIN, LONG_MAX, SIZE_POINTER,
-    KB, MB
+    SIZE_OBJECT, SIZE_STRING_HEADER, LONG_MIN, LONG_MAX, SIZE_POINTER
 } from "../size-constants";
 
 import {
@@ -14,14 +14,15 @@ import {
 
 const lzf = require("lzfjs");
 
-export abstract class KeyReaderBase { 
+export abstract class KeyReaderBase extends Allocator { 
 
-    private usedMemoryBytes: number = 0;
     private key: string;
 
     constructor(
         protected stream: ReadableStream,
         protected settings: ISettings) { 
+        
+        super();
     }
 
     read(keyType: string): Bluebird<IKey> { 
@@ -30,25 +31,12 @@ export abstract class KeyReaderBase {
             
             const result: IKey = {
                 key: this.key,
-                size: this.usedMemoryBytes,
+                size: this.getUsedMemoryBytes(),
                 keyType
             };
 
             return result;
         });
-    }
-
-    allocateMemory(byteCount: number): number { 
-
-        const alignBy = findMemoryBlockAlignment(byteCount);
-
-        if (byteCount & (alignBy - 1)) { 
-            byteCount += (alignBy - (byteCount & (alignBy - 1)));
-        }
-
-        this.usedMemoryBytes += byteCount;
-
-        return byteCount;
     }
 
     protected abstract readValue(): Bluebird<any>;
@@ -210,32 +198,6 @@ export abstract class KeyReaderBase {
                 return { value, byteCount: uncompressedLength };
             });
     }
-}
-
-function findMemoryBlockAlignment(size: number): number { 
-    for (const item of blockAlignSizes) { 
-        if (size >= item.breakingPoint) { 
-            return item.alignBy;
-        }
-    }
-
-    return 8;
-}
-
-const blockAlignSizes: IMemoryBlockConfig[] = [
-    { breakingPoint: 4*MB, alignBy: 4*MB },
-    { breakingPoint: 4*KB, alignBy: 4*KB },
-    { breakingPoint: 2*KB, alignBy: 512 },
-    { breakingPoint: KB, alignBy: 256 },
-    { breakingPoint: 512, alignBy: 128 },
-    { breakingPoint: 256, alignBy: 64 },
-    { breakingPoint: 128, alignBy: 32 },
-    { breakingPoint: 16, alignBy: 16 }
-];
-
-interface IMemoryBlockConfig {
-    breakingPoint: number;
-    alignBy: number;
 }
 
 export interface IReadStringParams { 

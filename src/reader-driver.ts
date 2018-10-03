@@ -2,6 +2,7 @@ import { ReadableStream } from "./readable-stream";
 import * as Bluebird from "bluebird";
 import { ISettings, IKey, IDumpReadResults } from "./schemas";
 import { KeyReaderBase } from "./key-readers/key-reader-base";
+import { Allocator } from "./key-readers/allocator";
 import { HashReader } from "./key-readers/hash-reader";
 import { ListReader } from "./key-readers/list-reader";
 import { SetReader } from "./key-readers/set-reader";
@@ -29,6 +30,7 @@ export class ReaderDriver {
     private stream: ReadableStream;
 
     private dbDictionaryAllocator = new DictionaryAllocator();
+    private dbAllocator: Allocator = new Allocator();
 
     constructor(
         filePath: string,
@@ -46,9 +48,11 @@ export class ReaderDriver {
     }
 
     private constructResults(): IDumpReadResults { 
+
+        const dbOverheadBytes = this.dbAllocator.getUsedMemoryBytes();
+        const byteCount = this.keys.reduce((t, k) => t + k.size, 0) + dbOverheadBytes + INITIAL_MEMORY_CONSUMPTION;
         
         const keyCount = this.keys.length;
-        const byteCount = this.keys.reduce((t, k) => t + k.size, 0) + INITIAL_MEMORY_CONSUMPTION;
         const keyTypeReportData = this.keys.reduce((t: any, k) => {
 
             let reportItem: { size: number, count: number } = t[k.keyType];
@@ -76,7 +80,8 @@ export class ReaderDriver {
 
         const resultsReportParts = [
             ``,
-            `${RED}Found ${keyCount} keys, estimated ${byteCount} bytes of memory consumption${COLOR_RESET}`,
+            `${RED}Found ${keyCount} keys, estimated ${byteCount} bytes of memory (incl. ${dbOverheadBytes} for key `
+                + `database overhead and ${INITIAL_MEMORY_CONSUMPTION} empty Redis memory usage)${COLOR_RESET}`,
             ``,
             `Memory usage by key type:`
         ].concat(keyTypeReportParts);
@@ -182,7 +187,7 @@ export class ReaderDriver {
 
     private addKey(reader: KeyReaderBase, rdbType: number): Bluebird<any> { 
         
-        this.dbDictionaryAllocator.addEntry(reader);
+        this.dbDictionaryAllocator.addEntry(this.dbAllocator);
         
         return reader.read(getRdbTypeTitle(rdbType)).then((keyData: IKey) => { 
             this.keys.push(keyData);
