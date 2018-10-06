@@ -11,6 +11,7 @@ export interface IKey {
 export interface IPrefixTreeNode { 
     prefix?: string;
     memory?: string;
+    keyCount: number;
     children?: IPrefixTreeNode[];
 }
 

@@ -18,9 +18,13 @@ exports.KeyTrie = KeyTrie;
 class TrieNode {
     constructor() {
         this.size = 0;
+        this.keyCount = 0;
     }
     getSize() {
         return this.size;
+    }
+    getKeyCount() {
+        return this.keyCount;
     }
     compact(minSize, parentNode, parentKey, parentKeyCount) {
         if (!this.children) {
@@ -46,6 +50,7 @@ class TrieNode {
                 key = parentKey + key;
                 delete parentNode.children[parentKey];
                 child.size = this.size;
+                child.keyCount = this.keyCount;
                 parentNode.children[key] = child;
             }
             child.compact(minSize, parentNode || this, key);
@@ -62,6 +67,7 @@ class TrieNode {
             throw new Error(`past key length for ${keyData.key}`);
         }
         this.size += keyData.size;
+        this.keyCount++;
         if (remainingChars >= 0) {
             const childNode = this.ensureChildNode(keyData, position);
             if (remainingChars >= 1) {
@@ -69,6 +75,7 @@ class TrieNode {
             }
             else {
                 childNode.size += keyData.size;
+                childNode.keyCount++;
                 childNode.isLeaf = true;
             }
         }
@@ -91,7 +98,8 @@ class TrieNode {
         }
         const result = {
             prefix: fullPath,
-            memory: percent
+            memory: percent,
+            keyCount: this.keyCount
         };
         if (resultChildren) {
             result.children = resultChildren;

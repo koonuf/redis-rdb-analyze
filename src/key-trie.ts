@@ -24,9 +24,14 @@ class TrieNode {
     private children?: ITrieChildren;
     private isLeaf?: boolean;
     private size = 0;
+    private keyCount = 0;
 
     getSize(): number { 
         return this.size;
+    }
+
+    getKeyCount(): number { 
+        return this.keyCount;
     }
 
     compact(minSize: number, parentNode?: TrieNode, parentKey?: string, parentKeyCount?: number) {
@@ -63,6 +68,7 @@ class TrieNode {
 
                 delete parentNode.children![parentKey];
                 child.size = this.size;
+                child.keyCount = this.keyCount;
                 parentNode.children![key] = child;
             }
 
@@ -85,6 +91,7 @@ class TrieNode {
         }
 
         this.size += keyData.size;
+        this.keyCount++;
         
         if (remainingChars >= 0) {
             const childNode = this.ensureChildNode(keyData, position);
@@ -94,6 +101,7 @@ class TrieNode {
 
             } else { 
                 childNode.size += keyData.size;
+                childNode.keyCount++;
                 childNode.isLeaf = true;
             }
         } 
@@ -127,7 +135,8 @@ class TrieNode {
 
         const result: IPrefixTreeNode = {
             prefix: fullPath,
-            memory: percent
+            memory: percent,
+            keyCount: this.keyCount
         };
 
         if (resultChildren) { 
