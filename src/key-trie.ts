@@ -34,13 +34,13 @@ class TrieNode {
         return this.keyCount;
     }
 
-    compact(minSize: number, parentNode?: TrieNode, parentKey?: string, parentKeyCount?: number) {
+    compact(minSize: number, parentNode?: TrieNode, parentKey?: string) {
 
         if (!this.children) {
             return;
         }
 
-        let childKeys = Object.keys(this.children);
+        const childKeys = Object.keys(this.children);
         let childKeyCount = childKeys.length;
 
         for (const key of childKeys) {
@@ -54,8 +54,6 @@ class TrieNode {
             delete this.children;
             return;
         }
-
-        childKeys = Object.keys(this.children);
 
         if (childKeys.length === 1 && !this.isLeaf) {
 
@@ -77,7 +75,11 @@ class TrieNode {
         } else {
 
             for (const key of childKeys) {
-                this.children[key].compact(minSize, this, key);
+                const item = this.children[key];
+
+                if (item) {
+                    item.compact(minSize, this, key);
+                }
             }
         }
     }
