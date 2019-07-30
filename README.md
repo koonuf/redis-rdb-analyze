@@ -90,3 +90,6 @@ Unfortunately its impossible to be 100% precise, especially if large sorted sets
 
 ## CLI arguments
 Currently, only one optional parameter (string encoding) is supported. It is "utf8" by default, which is the string encoding used by node.js Redis client, so it can be safely omitted.
+
+## Future development
+Is there something you'd like to be changed or added to the functionality? Please let me know if you are interested.
